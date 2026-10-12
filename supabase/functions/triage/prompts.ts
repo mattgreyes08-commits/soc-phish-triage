@@ -41,6 +41,8 @@ HOW TO JUDGE:
 - Spam vs legitimate marketing: check whether the sender is who the email claims to be.
   - Newsletters, receipts and marketing from a real, identifiable company, sent from that company's own domain, with no deceptive claim, are "legitimate". People usually signed up for them.
   - Mail that claims to be from a well-known brand or news outlet but comes from an address that does not belong to it is at least "spam".
+  - That sender check is only for mail that claims to BE a company, brand or service. Mailing-list posts, list digests, Google Groups and forum replies normally come from people's personal addresses (Gmail, a university, an employer); that alone is not a red flag.
+- Real work email is often short and has no context: "here's the file", a spreadsheet or PDF attachment, a quick question between colleagues. Do not call it "suspicious" just because context is missing or it has an ordinary attachment. Use "suspicious" only for a concrete red flag (an unexpected request for money, credentials or software installs, a mismatched or lookalike link, a risky attachment type).
   - Unsolicited junk from unknown senders (pharmacy, adult, get-rich, prize offers, obfuscated or random text) is "spam".
 - Real emails can sound urgent: do not flag without concrete evidence. If headers are absent, do not guess SPF/DKIM/DMARC results.
 - risk_score 0-100: how dangerous this email is if the user acts on it.

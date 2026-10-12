@@ -23,16 +23,22 @@ ap.add_argument("--seed", type=int, default=7)
 ap.add_argument("--workers", type=int, default=1, help="emails tested at the same time (4 is ~4x faster)")
 ap.add_argument("--exclude-seen", action="store_true", help="skip rows used in earlier saved runs (fresh emails only)")
 ap.add_argument("--tag", default="", help="suffix for the saved results file, e.g. 'before'")
+ap.add_argument("--bad-only", action="store_true", help="sample only label-1 emails (for all-phishing files like Nazario)")
+ap.add_argument("--ab-ignore", default="", help="with --exclude-ab, don't exclude this tag's rows (so 'after' reuses the 'before' sample)")
+ap.add_argument("--exclude-ab", action="store_true", help="with --exclude-seen, also skip rows from before/after runs in data/ab/")
 args = ap.parse_args()
 
 df = pd.read_csv(ROOT / "data/phishing" / args.file, encoding="latin-1", low_memory=False)
 if args.exclude_seen:
-    seen = {r["row"] for f in (ROOT / "data").glob(f"eval_{Path(args.file).stem}*.json")
-            for r in json.loads(f.read_text()).get("rows", [])}
+    files = list((ROOT / "data").glob(f"eval_{Path(args.file).stem}*.json"))
+    if args.exclude_ab:
+        files += [f for f in (ROOT / "data/ab").glob(f"eval_{Path(args.file).stem}_*.json")
+                  if not (args.ab_ignore and f.stem.endswith("_" + args.ab_ignore))]
+    seen = {r["row"] for f in files for r in json.loads(f.read_text()).get("rows", [])}
     df = df.drop(index=[i for i in seen if i in df.index])
     print(f"Skipping {len(seen)} emails used in earlier runs")
 # Balanced sample: half bad, half legitimate, so "flag everything" can't score well.
-half = args.n // 2
+half = 0 if args.bad_only else args.n // 2
 sample = pd.concat([df[df.label == 1].sample(args.n - half, random_state=args.seed),
                     df[df.label == 0].sample(half, random_state=args.seed)]).sample(frac=1, random_state=args.seed)
 
@@ -61,7 +67,8 @@ for i, ((idx, row), out) in enumerate(zip(sample.iterrows(), outs), 1):
 scored = tp + tn + fp + fn
 print(f"\nAgreed with dataset labels on {tp + tn}/{scored} emails ({args.file}, balanced random sample, seed {args.seed})")
 print(f"  caught bad email:        {tp}/{tp + fn}")
-print(f"  left legit email alone:  {tn}/{tn + fp}   (false alarms: {fp})")
+if tn + fp:
+    print(f"  left legit email alone:  {tn}/{tn + fp}   (false alarms: {fp})")
 if errors:
     print(f"  errors (not counted):    {errors}")
 
