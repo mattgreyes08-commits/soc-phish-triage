@@ -378,7 +378,7 @@ export default function App() {
         <div className="sidebar-bottom">
           <Button className="about-link" onClick={() => setAboutOpen(true)}>About TalosAI</Button>
           <div className="profile">
-            <div className="avatar">AK</div><div><strong>Alex Kim</strong><small>Security analyst</small></div><span className="online-dot" />
+            <div className="avatar">EM</div><div><strong>Enrique Mowad</strong><small>Security analyst</small></div><span className="online-dot" />
           </div>
         </div>
       </aside>
