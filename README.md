@@ -12,6 +12,8 @@ Built for **Track 1 (AI for SOC Analyst)** and the **Ciocca Venture Award**, 202
 
 **Who it's for:** Tier 1 analysts at MSPs (IT companies that protect many small businesses). They face alert fatigue, "is this a scam?" emails, and clients asking "should I worry?", and they need answers they can trust and explain. One 2026 industry survey (250 IT and security professionals, run by ViB for Prophet Security, a vendor) found teams leave an average of 28% of alerts uninvestigated: [Expert Insights, "Security Teams Ignore Nearly A Third Of Alerts"](https://expertinsights.com/news/security-teams-ignore-nearly-a-third-of-alerts).
 
+**Live app:** https://rise-riff-67930737.figma.site (opens without login; use the Demo mode switch for instant, offline results)
+
 ## How it works
 
 ```
