@@ -113,6 +113,20 @@ npx supabase functions deploy triage --use-api
 
 **Offline tests:** `node --test supabase/functions/triage/triage.test.ts` (Node 22.6+).
 
+## Security and data handling
+
+- **Secrets:** the Claude API key lives only in the Supabase secret `ANTHROPIC_API_KEY`. It is never in the app, prompts or Git. `.env`, `data/` and `*.csv` are git-ignored.
+- **Auth:** the `triage` function requires the project's anon key (`verify_jwt = true`). That key is public by design, so anyone with the app can call the function. There is no per-user login or rate limit yet; a production version would add both.
+- **What happens to input:** the function sends the pasted text to Claude (Anthropic API) and returns the result. It does not store inputs or results; only errors are logged.
+- **Prompt-injection hardening:** pasted content is wrapped as untrusted data, hidden text is pulled out and shown, and AI-directed instructions are flagged, not followed. Every evidence quote is checked against the input by code.
+- **Demo data:** team-written emails use reserved `.example` domains. Alerts are lab-generated (AIT-ADS); malware explanations use dataset averages, never real samples.
+- **Human in the loop:** TriageLens recommends; an analyst decides. It does not block, delete or quarantine anything on its own.
+- **Not for real client data yet:** this is a hackathon prototype. Don't paste sensitive client email into the public demo.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
 ## Team
 
 | Role | Person |
