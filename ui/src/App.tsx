@@ -51,6 +51,17 @@ async function runTriage(tool: Tool, input: string): Promise<TriageResult> {
 }
 
 const demoDelay = () => new Promise((resolve) => window.setTimeout(resolve, 1000));
+const canUseClipboard = () => typeof navigator !== "undefined" && typeof navigator.clipboard?.writeText === "function";
+
+async function copyText(text: string, notify: (message: string) => void) {
+  if (!canUseClipboard()) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    notify("Copied");
+  } catch {
+    // The copy control is hidden when the Clipboard API is unavailable.
+  }
+}
 
 const alertSamples = [
   {
@@ -171,7 +182,7 @@ function ResultCard({ result, error, onCopy }: { result: TriageResult | null; er
     <div className="result-top"><span className={`result-verdict ${tone}`}>{result.verdict}</span>{result.risk_score !== null && <strong>Risk: {result.risk_score}/100</strong>}</div>
     <H3 className="result-headline">{result.headline}</H3>
     {result.evidence?.length > 0 && <div className="result-section"><H3>Evidence</H3><div className="evidence-list">{result.evidence.map((item, index) => <div key={`${item.quote}-${index}`}><div className="evidence-quote"><q>{item.quote}</q><span className="evidence-verified" title="This exact text was found in the input."><Icon name="check" size={10} />Verified</span></div><p>{item.why}</p></div>)}</div></div>}
-    <div className="plain-english"><div><H3>Plain English</H3><Button onClick={onCopy}><Icon name="copy" size={13} />Copy</Button></div><p>{result.plain_english}</p></div>
+    <div className="plain-english"><div><H3>Plain English</H3>{canUseClipboard() && <Button onClick={onCopy}><Icon name="copy" size={13} />Copy</Button>}</div><p>{result.plain_english}</p></div>
     {result.next_steps?.length > 0 && <div className="result-section"><H3>Next steps</H3><div className="next-steps">{result.next_steps.map((step, index) => <div key={`${step}-${index}`}><span><Icon name="check" size={11} /></span><p>{step}</p></div>)}</div></div>}
   </section>;
 }
@@ -261,7 +272,7 @@ function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => 
       <label><span>Sample</span><Select value={activeMail} onChange={(event) => { const index = Number(event.target.value); setActiveMail(index); setInput(emails[index].input); }}>{emails.map((email, index) => <option value={index} key={email.label}>{email.label}</option>)}</Select></label>
       <label className="composer-input"><span>Or paste email text</span><Textarea value={input} onChange={(event) => setInput(event.target.value)} placeholder="Paste message body or headers here..." /></label>
     </div>
-    {(result || failed) && <ResultCard result={result} error={failed} onCopy={() => { navigator.clipboard.writeText(result?.plain_english ?? ""); notify("Plain-English analysis copied"); }} />}
+    {(result || failed) && <ResultCard result={result} error={failed} onCopy={() => copyText(result?.plain_english ?? "", notify)} />}
     <div className="triage-layout">
       <aside className="mailbox-panel">
         <div className="mailbox-heading"><div><H3>Inbox samples</H3><p>7 messages</p></div><Icon name="search" size={16} /></div>
@@ -270,7 +281,6 @@ function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => 
       <section className="email-preview">
         <div className="email-head"><H2>{mail.subject}</H2><div className="sender-row"><span className="mail-avatar">{mail.from.slice(0, 2).toUpperCase()}</span><div><strong>{mail.from}</strong><small>{mail.address} · to Finance Team</small></div><time>{mail.time}</time></div></div>
         <div className="email-body email-raw-preview">{mail.input}</div>
-        <div className="email-technical"><Button>Headers</Button><Button>Raw message</Button><Button>Attachments (0)</Button></div>
       </section>
       <aside className="analysis-panel">
         <div className="analysis-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see TalosAI's verdict and evidence.</p></div>
@@ -305,20 +315,20 @@ function MalwareScreen({ notify, demoMode }: { notify: (message: string) => void
       <AnalyzeButton loading={loading} onClick={analyze} />
     </div>
     <div className="malware-composer"><label><span>Malware type</span><Select value={malwareType} onChange={(event) => setMalwareType(event.target.value)}><option>Ransomware</option><option>Spyware</option><option>Trojan</option></Select></label><p>Choose a sample type, then run the live AI analysis.</p></div>
-    {(result || failed) && <ResultCard result={result} error={failed} onCopy={() => { navigator.clipboard.writeText(result?.plain_english ?? ""); notify("Plain-English analysis copied"); }} />}
+    {(result || failed) && <ResultCard result={result} error={failed} onCopy={() => copyText(result?.plain_english ?? "", notify)} />}
     <div className="sample-banner"><span className="file-icon"><Icon name="bug" /></span><div><strong>invoice_update.exe</strong><small>PE32 executable · 742 KB · SHA256 a72c4e…91d8</small></div><span className="verdict-chip malicious">Malicious</span><div className="sample-score"><strong>92</strong><small>/100 risk</small></div></div>
     <div className="malware-tabs">{["Overview", "Behavior", "Indicators", "MITRE ATT&CK"].map(item => <Button className={tab === item ? "active" : ""} onClick={() => setTab(item)} key={item}>{item}</Button>)}</div>
     <div className="malware-content">
       <div className="malware-main">
         {tab === "Overview" && <>
-          <section className="plain-report"><div className="report-heading"><span><Icon name="spark" size={16} /></span><div><H3>What this malware does</H3><p>Generated by TalosAI · High confidence</p></div></div><p>This file is an <strong>information stealer</strong>. Once opened, it quietly collects passwords saved in web browsers, cryptocurrency wallet data, and basic details about the infected computer. It then sends that information to an attacker-controlled server.</p><p>It also creates a scheduled task so it can restart whenever the user signs in, making the infection survive a reboot.</p></section>
+          <section className="plain-report"><div className="report-heading"><span><Icon name="spark" size={16} /></span><div><H3>What this malware does</H3><p>Generated by TalosAI</p></div></div><p>This file is an <strong>information stealer</strong>. Once opened, it quietly collects passwords saved in web browsers, cryptocurrency wallet data, and basic details about the infected computer. It then sends that information to an attacker-controlled server.</p><p>It also creates a scheduled task so it can restart whenever the user signs in, making the infection survive a reboot.</p></section>
           <div className="behavior-grid">{[["Steals credentials", "Reads passwords and cookies from Chrome, Edge, and Firefox.", "danger"], ["Establishes persistence", "Creates a scheduled task named UpdateTelemetry.", "warn"], ["Contacts attacker server", "Sends collected data to cdn-sync.cloud over HTTPS.", "danger"], ["Avoids detection", "Checks for virtual machines before running.", "neutral"]].map(([title, text, tone]) => <div className="behavior-card" key={title}><span className={tone}><Icon name={tone === "danger" ? "close" : tone === "warn" ? "clock" : "shield"} size={15} /></span><div><H3>{title}</H3><p>{text}</p></div></div>)}</div>
         </>}
         {tab === "Behavior" && <section className="detail-table"><H3>Observed process activity</H3>{[["00:01", "invoice_update.exe", "Creates hidden process"], ["00:03", "powershell.exe", "Runs encoded command"], ["00:05", "schtasks.exe", "Creates UpdateTelemetry task"], ["00:08", "invoice_update.exe", "Connects to cdn-sync.cloud"]].map(row => <div key={row[0]}><time>{row[0]}</time><strong>{row[1]}</strong><span>{row[2]}</span></div>)}</section>}
-        {tab === "Indicators" && <section className="detail-table indicators-table"><H3>Extracted indicators</H3>{["cdn-sync.cloud", "185.234.72.19", "a72c4e18b29f…91d8", "UpdateTelemetry"].map((item, i) => <div key={item}><span>{["Domain", "IP address", "SHA256", "Task"][i]}</span><strong>{item}</strong><AppButton onClick={() => notify(`${item} copied`)}>Copy</AppButton></div>)}</section>}
+        {tab === "Indicators" && <section className="detail-table indicators-table"><H3>Extracted indicators</H3>{["cdn-sync.cloud", "185.234.72.19", "a72c4e18b29f…91d8", "UpdateTelemetry"].map((item, i) => <div key={item}><span>{["Domain", "IP address", "SHA256", "Task"][i]}</span><strong>{item}</strong>{canUseClipboard() && <AppButton onClick={() => copyText(item, notify)}>Copy</AppButton>}</div>)}</section>}
         {tab === "MITRE ATT&CK" && <section className="mitre-grid">{[["T1059.001", "PowerShell", "Execution"], ["T1053.005", "Scheduled Task", "Persistence"], ["T1555.003", "Credentials from Browsers", "Credential Access"], ["T1041", "Exfiltration Over C2", "Exfiltration"]].map(row => <div key={row[0]}><strong>{row[0]}</strong><H3>{row[1]}</H3><span>{row[2]}</span></div>)}</section>}
       </div>
-      <aside className="response-card"><H3>Recommended response</H3><p>Complete these actions in order to contain the threat.</p>{["Isolate OPS-WS-117", "Block domain and IP", "Reset user credentials", "Remove scheduled task", "Hunt for matching hash"].map((step, i) => <div className="response-step" key={step}><span>{i + 1}</span><p>{step}</p></div>)}<AppButton variant="primary" onClick={() => notify("Response playbook started")}><Icon name="bolt" size={14} /> Start response playbook</AppButton></aside>
+      <aside className="response-card"><H3>Recommended response</H3><p>Complete these actions in order to contain the threat.</p>{["Isolate OPS-WS-117", "Block domain and IP", "Reset user credentials", "Remove scheduled task", "Hunt for matching hash"].map((step, i) => <div className="response-step" key={step}><span>{i + 1}</span><p>{step}</p></div>)}</aside>
     </div>
   </div>;
 }
@@ -326,9 +336,6 @@ function MalwareScreen({ notify, demoMode }: { notify: (message: string) => void
 export default function App() {
   const [selectedId, setSelectedId] = useState(alerts[0].id);
   const [query, setQuery] = useState("");
-  const [assistantOpen, setAssistantOpen] = useState(true);
-  const [prompt, setPrompt] = useState("");
-  const [copilotAnswer, setCopilotAnswer] = useState("");
   const [toast, setToast] = useState("");
   const [view, setView] = useState("Overview");
   const [demoMode, setDemoMode] = useState(false);
@@ -352,14 +359,6 @@ export default function App() {
     setSelectedId(id);
     const alert = alerts.find((item) => item.id === id);
     if (alert) setAlertInput(alert.input);
-  }
-
-  function askCopilot(text = prompt) {
-    if (!text.trim()) return;
-    setPrompt("");
-    setCopilotAnswer(alertResult
-      ? "Use the analyzed verdict, verified evidence, and next steps shown in the result card."
-      : "Press Analyze first so TalosAI can generate a verdict and evidence from the original alert.");
   }
 
   async function analyzeAlert() {
@@ -392,7 +391,6 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <Button className="nav-item"><Icon name="settings" /><span>Settings</span></Button>
           <Button className="about-link" onClick={() => setAboutOpen(true)}>About TalosAI</Button>
           <div className="profile">
             <div className="avatar">AK</div><div><strong>Alex Kim</strong><small>Security analyst</small></div><span className="online-dot" />
@@ -408,8 +406,7 @@ export default function App() {
               <Button className={`demo-toggle ${demoMode ? "active" : ""}`} aria-pressed={demoMode} onClick={() => setDemoMode((current) => !current)}><span className="toggle-track"><i /></span><strong>Demo mode</strong></Button>
               {demoMode && <span className="demo-badge">DEMO</span>}
             </div>
-            <label className="global-search"><Icon name="search" size={17} /><Input aria-label="Search alerts" placeholder="Search alerts, users, IPs..." value={query} onChange={(e) => setQuery(e.target.value)} /><kbd>⌘ K</kbd></label>
-            <Button className="icon-button" aria-label="Notifications"><span className="notification-dot" /><Icon name="clock" /></Button>
+            <label className="global-search"><Icon name="search" size={17} /><Input aria-label="Search alerts" placeholder="Search alerts, users, IPs..." value={query} onChange={(e) => setQuery(e.target.value)} /></label>
           </div>
         </header>
 
@@ -417,11 +414,10 @@ export default function App() {
         {view === "Phishing" && <EmailTriageScreen notify={notify} demoMode={demoMode} />}
         {view === "Malware analysis" && <MalwareScreen notify={notify} demoMode={demoMode} />}
         {view === "Alerts" && <>
-        <div className={`workspace ${assistantOpen ? "" : "assistant-closed"}`}>
+        <div className="workspace assistant-closed">
           <section className="queue-panel">
             <div className="panel-heading">
               <div><H2>Alert queue</H2><p>{visibleAlerts.length} alerts shown</p></div>
-              <AppButton variant="secondary"><Icon name="bolt" size={15} /> Run automation</AppButton>
             </div>
             <div className="alert-list">
               {visibleAlerts.map((alert) => (
@@ -458,24 +454,9 @@ export default function App() {
                 <div><span>Time</span><strong>{selected.time}</strong></div>
                 <div className="alert-log"><span>Log</span><code>{selected.log || "No log text provided"}</code></div>
               </div>
-              {(alertResult || alertFailed) ? <ResultCard result={alertResult} error={alertFailed} onCopy={() => { navigator.clipboard.writeText(alertResult?.plain_english ?? ""); notify("Plain-English analysis copied"); }} /> : <div className="analysis-waiting alert-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see the verdict and evidence.</p></div>}
+              {(alertResult || alertFailed) ? <ResultCard result={alertResult} error={alertFailed} onCopy={() => copyText(alertResult?.plain_english ?? "", notify)} /> : <div className="analysis-waiting alert-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see the verdict and evidence.</p></div>}
             </div>
           </section>
-
-          {assistantOpen ? <aside className="copilot">
-            <div className="copilot-head"><div><span className="copilot-icon"><Icon name="spark" size={16} /></span><div><H2>Analyst copilot</H2><p>Grounded in this alert</p></div></div><Button onClick={() => setAssistantOpen(false)} aria-label="Close copilot"><Icon name="close" size={17} /></Button></div>
-            <div className="copilot-body">
-              <div className="copilot-intro"><span><Icon name="spark" size={18} /></span><H3>How can I help?</H3><p>Ask about evidence, impact, or recommended response steps.</p></div>
-              {copilotAnswer && <div className="copilot-answer"><span><Icon name="spark" size={14} /></span><p>{copilotAnswer}</p></div>}
-              <div className="suggested">
-                <small>Suggested prompts</small>
-                <Button onClick={() => askCopilot("Why is this suspicious?")}>Why is this suspicious?<Icon name="chevron" size={14} /></Button>
-                <Button onClick={() => askCopilot("Draft a stakeholder update")}>Draft a stakeholder update<Icon name="chevron" size={14} /></Button>
-                <Button onClick={() => askCopilot("What should I investigate next?")}>What should I investigate next?<Icon name="chevron" size={14} /></Button>
-              </div>
-            </div>
-            <div className="prompt-box"><Textarea aria-label="Ask copilot" placeholder="Ask about this alert..." value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askCopilot(); } }} /><Button onClick={() => askCopilot()} aria-label="Send prompt"><Icon name="chevron" size={17} /></Button><small>AI can make mistakes. Verify critical findings.</small></div>
-          </aside> : <Button className="open-copilot" onClick={() => setAssistantOpen(true)}><Icon name="spark" size={16} /> Copilot</Button>}
         </div>
         </>}
       </main>
