@@ -49,7 +49,7 @@ The spam dataset labels spam and phishing together, so the accuracy number measu
 |---|---|---|
 | **Phishing Email Dataset** (Enron, Ling, CEAS-08, Nazario, Nigerian Fraud, SpamAssassin) | Phishing demo samples and accuracy testing | Kaggle: [naserabdullahalam/phishing-email-dataset](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset) |
 | **AIT Alert Data Set (AIT-ADS)**, provided by CrowdStrike | The 5 real Alerts-tab samples (scenario `russellmitchell`) | Zenodo: [record 8263181](https://zenodo.org/records/8263181), CC BY 4.0 |
-| **CIC-MalMem-2022** (obfuscated malware memory analysis) | Per-type averages behind the malware explanations | Canadian Institute for Cybersecurity, via Kaggle |
+| **MalMem augmented 5-class dataset**, based on CIC-MalMem-2022 (obfuscated malware memory analysis) | Per-type averages behind the malware explanations | Kaggle: [shanmukhadattaboda/malmem-augmneted-5-class-datasets](https://www.kaggle.com/datasets/shanmukhadattaboda/malmem-augmneted-5-class-datasets); original by the Canadian Institute for Cybersecurity |
 | Team-written blind test (18 emails) | Blind accuracy test | `samples/phishing_demo.txt`, `samples/answer_key.txt` |
 
 Raw datasets are not committed (`data/` is in `.gitignore`). Links in team-written samples use reserved `.example` domains.
