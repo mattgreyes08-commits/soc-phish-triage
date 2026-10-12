@@ -1,0 +1,27 @@
+{
+  "1. Antivirus update (harmless)": {
+    "attack_phase": "normal activity",
+    "expected_severity": "low",
+    "wazuh_level": 3
+  },
+  "2. Nmap scan from inside the network": {
+    "attack_phase": "service_scans",
+    "expected_severity": "medium",
+    "wazuh_level": 3
+  },
+  "3. Web server flooded with 404s": {
+    "attack_phase": "dirb",
+    "expected_severity": "medium",
+    "wazuh_level": 10
+  },
+  "4. Web server account switched users": {
+    "attack_phase": "privilege_escalation",
+    "expected_severity": "high",
+    "wazuh_level": 3
+  },
+  "5. Password file read as root (rated LOW by tool)": {
+    "attack_phase": "privilege_escalation",
+    "expected_severity": "critical",
+    "wazuh_level": 3
+  }
+}

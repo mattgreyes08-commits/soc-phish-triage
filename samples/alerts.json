@@ -1,0 +1,121 @@
+{
+  "1. Antivirus update (harmless)": {
+    "alert_id": "WAZUH-1685715378.241",
+    "time": "2022-01-21T00:02:27.000000Z",
+    "source": "Wazuh",
+    "host": "mail",
+    "rule": "ClamAV database update",
+    "rule_id": "52507",
+    "severity_from_tool": "Level 3 of 15",
+    "rule_groups": [
+      "clamd",
+      "freshclam",
+      "virus"
+    ],
+    "log": "Jan 21 00:02:27 mail freshclam[31104]: Fri Jan 21 00:02:27 2022 -> ClamAV update process started at Fri Jan 21 00:02:27 2022",
+    "details": {}
+  },
+  "2. Nmap scan from inside the network": {
+    "alert_id": "WAZUH-1685988653.6767986",
+    "time": "2022-01-24T03:57:01.687867Z",
+    "source": "Wazuh / Suricata IDS",
+    "host": "wazuh-client",
+    "rule": "Suricata: Alert - ET SCAN Possible Nmap User-Agent Observed",
+    "rule_id": "86601",
+    "severity_from_tool": "Level 3 of 15",
+    "rule_groups": [
+      "ids",
+      "suricata"
+    ],
+    "log": "",
+    "details": {
+      "app_proto": "http",
+      "src_ip": "192.168.230.122",
+      "src_port": "34642",
+      "event_type": "alert",
+      "alert": {
+        "signature": "ET SCAN Possible Nmap User-Agent Observed",
+        "category": "Web Application Attack",
+        "severity": "1",
+        "action": "allowed"
+      },
+      "dest_ip": "172.19.130.68",
+      "proto": "TCP",
+      "files": [
+        {
+          "filename": "/sdk",
+          "size": 441,
+          "stored": false,
+          "state": "CLOSED",
+          "tx_id": 0,
+          "gaps": false,
+          "sid": []
+        }
+      ],
+      "dest_port": "80",
+      "timestamp": "2022-01-24T03:57:01.687867+0000"
+    }
+  },
+  "3. Web server flooded with 404s": {
+    "alert_id": "WAZUH-1685988677.6869674",
+    "time": "2022-01-24T03:57:26.000000Z",
+    "source": "Wazuh",
+    "host": "wazuh-client",
+    "rule": "Multiple web server 400 error codes from same source ip.",
+    "rule_id": "31151",
+    "severity_from_tool": "Level 10 of 15",
+    "rule_groups": [
+      "web",
+      "accesslog",
+      "web_scan",
+      "recon"
+    ],
+    "log": "172.19.131.174 - - [24/Jan/2022:03:57:26 +0000] \"GET /randomfile1 HTTP/1.1\" 404 3383 \"-\" \"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)\"",
+    "details": {
+      "protocol": "GET",
+      "srcip": "172.19.131.174",
+      "id": "404",
+      "url": "/randomfile1"
+    }
+  },
+  "4. Web server account switched users": {
+    "alert_id": "WAZUH-1685991091.12214835",
+    "time": "2022-01-24T04:37:40.000000Z",
+    "source": "Wazuh",
+    "host": "intranet-server",
+    "rule": "User successfully changed UID.",
+    "rule_id": "5304",
+    "severity_from_tool": "Level 3 of 15",
+    "rule_groups": [
+      "syslog",
+      "su",
+      "authentication_success"
+    ],
+    "log": "Jan 24 04:37:40 intranet-server su[27950]: + /dev/pts/1 www-data:jhall",
+    "details": {
+      "srcuser": "www",
+      "dstuser": "data:jhall"
+    }
+  },
+  "5. Password file read as root (rated LOW by tool)": {
+    "alert_id": "WAZUH-1685991117.12215918",
+    "time": "2022-01-24T04:38:06.000000Z",
+    "source": "Wazuh",
+    "host": "intranet-server",
+    "rule": "Successful sudo to ROOT executed.",
+    "rule_id": "5402",
+    "severity_from_tool": "Level 3 of 15",
+    "rule_groups": [
+      "syslog",
+      "sudo"
+    ],
+    "log": "Jan 24 04:38:06 intranet-server sudo:    jhall : TTY=pts/1 ; PWD=/var/www/intranet.smith.russellmitchell.com/wp-content/uploads/2022/01 ; USER=root ; COMMAND=/bin/cat /etc/shadow",
+    "details": {
+      "srcuser": "jhall",
+      "dstuser": "root",
+      "tty": "pts/1",
+      "pwd": "/var/www/intranet.smith.russellmitchell.com/wp-content/uploads/2022/01",
+      "command": "/bin/cat /etc/shadow"
+    }
+  }
+}
