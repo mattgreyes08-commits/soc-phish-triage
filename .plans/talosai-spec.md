@@ -1,9 +1,9 @@
-# TriageLens: AI Pipeline Spec (aligned with Team Guide v2)
+# TalosAI: AI Pipeline Spec (aligned with Team Guide v2)
 
 Hackathon on 2026-10-12, Track 1 (AI for SOC Analyst) and the Ciocca Venture Award.
 Feature freeze is at **2:30 PM PT**. Submit by 3:45.
 
-This spec covers the AI side of TriageLens:
+This spec covers the AI side of TalosAI:
 - the Supabase `triage` function (prompts, verifier, score floors)
 - the Python scripts: eval, demo results, malware profiles
 
@@ -19,7 +19,7 @@ It started as the v1 "Role B" interview spec. It is now updated for Team Guide v
 | Roles A/B/C/D | **CS 1** Backend · **CS 2** Malware + prompt pair · **Improv 1** UI + demo driver · **Improv 2** Phishing + prompt pair + pitch | The v1 "Role B" work is now split between CS 1 (function, verifier, floors, eval) and the prompt pair (CS 2 + Improv 2) |
 | `cache/*.json` keyed by hash | **`demo_results.json`**, pasted into Figma Make's Demo-mode toggle | Cache keyed by demo input id. Hash key kept only in the Python scripts |
 | Naive-chatbot side-by-side was core | It is a **stretch** goal | Do it only after the must-haves pass |
-| Alerts were hand-written samples | TriageLens is **tested against [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)**, a local lab of deliberately vulnerable AI agents | DVAA attack-log entries become the real Alerts input. DVAA's payloads also red-team our own prompts. See §10a |
+| Alerts were hand-written samples | TalosAI is **tested against [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)**, a local lab of deliberately vulnerable AI agents | DVAA attack-log entries become the real Alerts input. DVAA's payloads also red-team our own prompts. See §10a |
 
 ## 1. Decisions at a glance
 
@@ -275,7 +275,7 @@ If a floor changed the verdict, regenerate `headline` and `plain_english` with a
 Do this only after all the must-haves pass:
 - **Try to record a real failure.** Before 2:00, try plain prompts on the trap email with no wrapper and "Is this email safe?". If one is fooled, save it to `demo_results.json` under `naive_trap`.
 - **Show it honestly.** Label it "Recorded run · <model> · plain prompt", with the exact prompt visible.
-- **If nothing is fooled,** skip the comparison and show the hidden/AI-directed line with TriageLens catching it. **Never fake a failure.**
+- **If nothing is fooled,** skip the comparison and show the hidden/AI-directed line with TalosAI catching it. **Never fake a failure.**
 
 ## 10a. DVAA: the test target
 
@@ -299,7 +299,7 @@ OPENA2A_TELEMETRY=off dvaa ...      # turn telemetry off if venue rules require 
 - Default mode is simulated and deterministic, with no key needed. **Use it for the demo.**
 - LLM mode takes an Anthropic key in the dashboard's Settings, or `dvaa chat --llm` with `$ANTHROPIC_API_KEY`.
 
-### How TriageLens uses it
+### How TalosAI uses it
 
 **1. DVAA attack logs become real alerts for the Alerts tab.**
 
@@ -330,11 +330,11 @@ The last row shows the tool doesn't cry wolf.
 
 *Pitch line:* "These aren't made-up alerts. They are real attack logs from a vulnerable AI-agent lab, translated for Maya."
 
-**2. DVAA payloads red-team TriageLens itself.**
+**2. DVAA payloads red-team TalosAI itself.**
 - DVAA alert payloads *are* prompt injections. An alert containing "ignore previous instructions" must be summarized as an attack, not obeyed.
 - The `ai_phrases` scan and the `ai_instruction` floor (§6) apply to alert payload fields too.
 - Add 2 DVAA payloads to `samples/expected.json` as injection regression tests. The expected result: `ai_manipulation_detected=true`, and the summary describes the attack.
-- If a payload ever changes TriageLens's own behavior, fix the prompt and record it in the test table. "We attacked ourselves with DVAA" is strong pitch material.
+- If a payload ever changes TalosAI's own behavior, fix the prompt and record it in the test table. "We attacked ourselves with DVAA" is strong pitch material.
 
 **3. Optional: an SOC-for-AI-agents angle (pitch only, no build).** MSP clients are starting to deploy AI agents, and their alerts will look like DVAA's. This goes on the roadmap slide.
 

@@ -1,5 +1,5 @@
 // Supabase Edge Function "triage": POST {tool: "phishing"|"alert"|"malware", input: string}
-// -> TriageLens result JSON (shared contract, spec §2). For malware, input is the family name.
+// -> TalosAI result JSON (shared contract, spec §2). For malware, input is the family name.
 
 import { callClaude } from "./claude.ts";
 import { BadRequest, runTriage } from "./triage.ts";

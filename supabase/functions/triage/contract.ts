@@ -1,4 +1,4 @@
-// The shared TriageLens result format (Team Guide v2 page 7 + spec §2 additions),
+// The shared TalosAI result format (Team Guide v2 page 7 + spec §2 additions),
 // plus the allowlists the verifier enforces.
 
 export type Tool = "phishing" | "alert" | "malware";

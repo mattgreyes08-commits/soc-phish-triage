@@ -1,6 +1,6 @@
 # `triage` Supabase Edge Function
 
-`POST {tool, input}` → a TriageLens result in the shared format (see `.plans/triagelens-spec.md` §2).
+`POST {tool, input}` → a TalosAI result in the shared format (see `.plans/talosai-spec.md` §2).
 
 | tool | input |
 |---|---|

@@ -1,9 +1,9 @@
-"""How often does TriageLens agree with the dataset's labels? (CS 1, the pitch number)
+"""How often does TalosAI agree with the dataset's labels? (CS 1, the pitch number)
 
 Run:  .venv/bin/python eval.py                          # 40 emails from CEAS_08.csv
       .venv/bin/python eval.py --file SpamAssasin.csv   # second, independent dataset
       .venv/bin/python eval.py --n 5                    # quick smoke test
-Agreement = TriageLens says "not legitimate" exactly when the dataset label is 1 (spam or phishing).
+Agreement = TalosAI says "not legitimate" exactly when the dataset label is 1 (spam or phishing).
 The dataset does not separate spam from phishing, so this measures "caught bad email", not "told them apart".
 """
 import argparse

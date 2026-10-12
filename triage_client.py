@@ -1,4 +1,4 @@
-"""Shared helper for the Python scripts: send one input through TriageLens.
+"""Shared helper for the Python scripts: send one input through TalosAI.
 
 Plan A (TRIAGE_URL set in .env): POST to the deployed Supabase `triage` function,
 so eval and demo results use exactly the same pipeline as the live app.
@@ -34,7 +34,7 @@ def mode():
 
 
 def triage(tool, text):
-    """Return a TriageLens result dict for one input. tool = phishing | alert | malware."""
+    """Return a TalosAI result dict for one input. tool = phishing | alert | malware."""
     start = time.time()
     result = _via_function(tool, text) if mode() == "function" else _via_claude(tool, text)
     result.setdefault("scoring", {})["latency_s"] = round(time.time() - start, 1)

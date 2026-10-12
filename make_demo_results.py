@@ -1,4 +1,4 @@
-"""Run every demo input through TriageLens and save demo_results.json (CS 1, 2:15).
+"""Run every demo input through TalosAI and save demo_results.json (CS 1, 2:15).
 
 This is the offline safety net: Improv 1 pastes demo_results.json into Figma Make's Demo-mode toggle.
 Run: .venv/bin/python make_demo_results.py

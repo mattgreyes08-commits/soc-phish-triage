@@ -1,4 +1,4 @@
-# TriageLens Style Guide (draft for the prompt pair)
+# TalosAI Style Guide (draft for the prompt pair)
 
 All three tools (Alerts, Phishing, Malware) should sound like one product. These rules are already
 built into the prompts in `supabase/functions/triage/prompts.ts` (the `STYLE` block and each tool's
