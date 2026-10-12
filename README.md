@@ -30,7 +30,7 @@ Figma Make app ──POST {tool, input}──▶ Supabase Edge Function "triage"
 4. **Code has the final word.** Rule-based minimum scores: if code finds an AI-directed instruction, the score can't go below 80; reading `/etc/shadow` in an alert is always critical.
 5. **Outputs are verified.** Every evidence quote must appear in the source, character for character, or it is dropped. Malware numbers must come from the dataset profile.
 
-If Claude is unreachable, the function returns a labeled rules-only verdict instead of an error. The app's **Demo mode** uses saved results stored in the app, so it is designed to work offline (being verified with Wi-Fi off).
+If Claude is unreachable, the function returns a labeled rules-only verdict instead of an error. The app's **Demo mode** uses saved results stored in the app, so it works offline: with all outside network requests blocked, all 15 sample inputs (5 alerts, 7 phishing, 3 malware) showed their saved results with no calls to Supabase or Claude. Only the Google Fonts stylesheet fails to load, and the text falls back to a system font.
 
 ## Results
 
