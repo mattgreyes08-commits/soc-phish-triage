@@ -20,9 +20,17 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--file", default="CEAS_08.csv")
 ap.add_argument("--n", type=int, default=40)
 ap.add_argument("--seed", type=int, default=7)
+ap.add_argument("--workers", type=int, default=1, help="emails tested at the same time (4 is ~4x faster)")
+ap.add_argument("--exclude-seen", action="store_true", help="skip rows used in earlier saved runs (fresh emails only)")
+ap.add_argument("--tag", default="", help="suffix for the saved results file, e.g. 'before'")
 args = ap.parse_args()
 
 df = pd.read_csv(ROOT / "data/phishing" / args.file, encoding="latin-1", low_memory=False)
+if args.exclude_seen:
+    seen = {r["row"] for f in (ROOT / "data").glob(f"eval_{Path(args.file).stem}*.json")
+            for r in json.loads(f.read_text()).get("rows", [])}
+    df = df.drop(index=[i for i in seen if i in df.index])
+    print(f"Skipping {len(seen)} emails used in earlier runs")
 # Balanced sample: half bad, half legitimate, so "flag everything" can't score well.
 half = args.n // 2
 sample = pd.concat([df[df.label == 1].sample(args.n - half, random_state=args.seed),
@@ -30,8 +38,10 @@ sample = pd.concat([df[df.label == 1].sample(args.n - half, random_state=args.se
 
 print(f"Evaluating {len(sample)} emails from {args.file} via {mode()} ({MODEL if mode() == 'direct' else 'deployed function'})\n")
 rows, tp, tn, fp, fn, errors = [], 0, 0, 0, 0, 0
-for i, (idx, row) in enumerate(sample.iterrows(), 1):
-    out = triage("phishing", email_text(row))
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(args.workers) as pool:
+    outs = list(pool.map(lambda r: triage("phishing", email_text(r[1])), sample.iterrows()))
+for i, ((idx, row), out) in enumerate(zip(sample.iterrows(), outs), 1):
     truth_bad = int(row.label) == 1
     if "error" in out:
         errors += 1
@@ -55,7 +65,9 @@ print(f"  left legit email alone:  {tn}/{tn + fp}   (false alarms: {fp})")
 if errors:
     print(f"  errors (not counted):    {errors}")
 
-out_file = ROOT / f"data/eval_{Path(args.file).stem}.json"
+# Tagged runs (before/after comparisons) go in data/ab/ so --exclude-seen draws the same fresh sample for both.
+out_file = (ROOT / "data/ab" / f"eval_{Path(args.file).stem}_{args.tag}.json") if args.tag else ROOT / f"data/eval_{Path(args.file).stem}.json"
+out_file.parent.mkdir(exist_ok=True)
 out_file.write_text(json.dumps({"file": args.file, "n": scored, "agree": tp + tn, "tp": tp, "tn": tn,
                                 "fp": fp, "fn": fn, "errors": errors, "rows": rows}, indent=2))
 print(f"Saved details to {out_file}")

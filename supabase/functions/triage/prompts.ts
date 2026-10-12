@@ -38,6 +38,10 @@ ${securityRules(n, "email")}
 HOW TO JUDGE:
 - Weigh urgency, requests for credentials or money, suspicious links, impersonation, generic greetings, and too-good-to-be-true offers.
 - verdict = "phishing" (tries to steal credentials, money, or access), "spam" (unwanted bulk mail or scam ads), "suspicious" (some red flags but not conclusive), or "legitimate".
+- Spam vs legitimate marketing: check whether the sender is who the email claims to be.
+  - Newsletters, receipts and marketing from a real, identifiable company, sent from that company's own domain, with no deceptive claim, are "legitimate". People usually signed up for them.
+  - Mail that claims to be from a well-known brand or news outlet but comes from an address that does not belong to it is at least "spam".
+  - Unsolicited junk from unknown senders (pharmacy, adult, get-rich, prize offers, obfuscated or random text) is "spam".
 - Real emails can sound urgent: do not flag without concrete evidence. If headers are absent, do not guess SPF/DKIM/DMARC results.
 - risk_score 0-100: how dangerous this email is if the user acts on it.
 
