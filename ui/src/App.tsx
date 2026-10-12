@@ -9,22 +9,16 @@ const H1 = "h1";
 const H2 = "h2";
 const H3 = "h3";
 
-type Severity = "Critical" | "High" | "Medium" | "Low";
 type Alert = {
   id: string;
   title: string;
   input: string;
   source: string;
   time: string;
-  severity: Severity;
-  status: "New" | "Investigating" | "Contained";
-  score: number;
-  summary: string;
-  user: string;
-  asset: string;
-  indicators: string[];
-  timeline: { time: string; text: string; tone: "danger" | "warn" | "neutral" }[];
-  recommendation: string;
+  rule: string;
+  host: string;
+  toolRating: string;
+  log: string;
 };
 
 type Tool = "alert" | "phishing" | "malware";
@@ -119,20 +113,16 @@ const alertSamples = [
   },
 ];
 
-const alertPresentation: Omit<Alert, "id" | "title" | "input" | "source">[] = [
-  { time: "Jan 21, 00:02", severity: "Low", status: "New", score: 20, summary: "ClamAV started its routine antivirus signature database update.", user: "freshclam", asset: "mail", indicators: ["ClamAV", "freshclam", "Rule 52507"], timeline: [{ time: "00:02", text: "Database update process started", tone: "neutral" }], recommendation: "Confirm the signature update completed successfully, then close as expected activity." },
-  { time: "Jan 24, 03:57", severity: "Medium", status: "New", score: 48, summary: "Suricata observed an Nmap user agent scanning an internal web endpoint.", user: "192.168.230.122", asset: "wazuh-client", indicators: ["192.168.230.122", "172.19.130.68", "/sdk", "Nmap"], timeline: [{ time: "03:57", text: "Nmap user agent requested /sdk", tone: "warn" }], recommendation: "Identify the source device and confirm whether this was authorized internal scanning." },
-  { time: "Jan 24, 03:57", severity: "High", status: "Investigating", score: 72, summary: "A single source generated repeated HTTP 404 responses, consistent with automated web reconnaissance.", user: "172.19.131.174", asset: "wazuh-client", indicators: ["172.19.131.174", "/randomfile1", "HTTP 404", "Rule 31151"], timeline: [{ time: "03:57", text: "Repeated missing-file requests detected", tone: "warn" }], recommendation: "Review adjacent web requests and block the source if the scanning was not authorized." },
-  { time: "Jan 24, 04:37", severity: "Medium", status: "New", score: 58, summary: "The web server account successfully switched to another user through su.", user: "www-data", asset: "intranet-server", indicators: ["www-data", "jhall", "/dev/pts/1", "su"], timeline: [{ time: "04:37", text: "www-data changed user identity", tone: "warn" }], recommendation: "Validate the interactive session and review how the web service account gained terminal access." },
-  { time: "Jan 24, 04:38", severity: "Low", status: "New", score: 35, summary: "Wazuh rated this low, but the event shows a user using sudo to read the root password hash file.", user: "jhall", asset: "intranet-server", indicators: ["/etc/shadow", "sudo", "root", "jhall"], timeline: [{ time: "04:38", text: "jhall executed cat /etc/shadow as root", tone: "danger" }], recommendation: "Immediately validate the account activity, preserve authentication logs, and investigate potential credential theft." },
-];
-
-const alerts: Alert[] = alertSamples.map((sample, index) => ({
+const alerts: Alert[] = alertSamples.map((sample) => ({
   id: sample.data.alert_id,
   title: sample.label,
   input: JSON.stringify(sample.data, null, 2),
   source: sample.data.source,
-  ...alertPresentation[index],
+  time: sample.data.time,
+  rule: sample.data.rule,
+  host: sample.data.host,
+  toolRating: sample.data.severity_from_tool,
+  log: sample.data.log,
 }));
 
 const iconPaths: Record<string, ReactNode> = {
@@ -157,10 +147,6 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{iconPaths[name]}</svg>;
 }
 
-function SeverityPill({ severity }: { severity: Severity }) {
-  return <span className={`severity severity-${severity.toLowerCase()}`}><span />{severity}</span>;
-}
-
 function AppButton({ children, variant = "secondary", onClick, className = "", disabled = false }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost"; onClick?: () => void; className?: string; disabled?: boolean }) {
   return <Button className={`app-button ${variant} ${className}`} onClick={onClick} disabled={disabled}>{children}</Button>;
 }
@@ -172,7 +158,7 @@ function AnalyzeButton({ loading, onClick }: { loading: boolean; onClick: () => 
 function ResultCard({ result, error, onCopy }: { result: TriageResult | null; error: boolean | string; onCopy: () => void }) {
   if (error) return <div className="analysis-error">{typeof error === "string" ? error : "Something went wrong. Try demo mode."}</div>;
   if (!result) return null;
-  const verdict = result.verdict.toLowerCase();
+  const verdict = String(result.verdict ?? "").toLowerCase();
   const tone = verdict.includes("phishing") || verdict.includes("critical")
     ? "red"
     : verdict.includes("suspicious") || verdict.includes("high") || verdict.includes("medium")
@@ -209,7 +195,7 @@ function OverviewScreen({ onNavigate }: { onNavigate: (view: string) => void }) 
     <div className="overview-grid">
       <section className="overview-card priority-card">
         <div className="card-heading"><div><H3>Priority queue</H3><p>Ranked by TalosAI</p></div><Button onClick={() => onNavigate("Alerts")}>View all <Icon name="chevron" size={13} /></Button></div>
-        {alerts.slice(0, 3).map((alert) => <Button className="priority-item" key={alert.id} onClick={() => onNavigate("Alerts")}><span className={`priority-symbol ${alert.severity.toLowerCase()}`}><Icon name={alert.source.includes("Defender") ? "mail" : alert.source.includes("Crowd") ? "bug" : "shield"} size={15} /></span><span><strong>{alert.title}</strong><small>{alert.source} · {alert.time}</small></span><SeverityPill severity={alert.severity} /></Button>)}
+        {alerts.slice(0, 3).map((alert) => <Button className="priority-item" key={alert.id} onClick={() => onNavigate("Alerts")}><span className="priority-symbol"><Icon name="shield" size={15} /></span><span><strong>{alert.title}</strong><small>{alert.source} · {alert.host}</small></span><small>Wazuh rated: {alert.toolRating}</small></Button>)}
       </section>
     </div>
   </div>;
@@ -339,7 +325,6 @@ function MalwareScreen({ notify, demoMode }: { notify: (message: string) => void
 
 export default function App() {
   const [selectedId, setSelectedId] = useState(alerts[0].id);
-  const [filter, setFilter] = useState<"All" | Severity>("All");
   const [query, setQuery] = useState("");
   const [assistantOpen, setAssistantOpen] = useState(true);
   const [prompt, setPrompt] = useState("");
@@ -353,10 +338,9 @@ export default function App() {
   const [alertLoading, setAlertLoading] = useState(false);
   const [alertFailed, setAlertFailed] = useState<boolean | string>(false);
 
-  const filtered = useMemo(() => alerts.filter((a) =>
-    (filter === "All" || a.severity === filter) &&
-    `${a.title} ${a.source} ${a.user}`.toLowerCase().includes(query.toLowerCase())
-  ), [filter, query]);
+  const visibleAlerts = useMemo(() => alerts.filter((alert) =>
+    `${alert.title ?? ""} ${alert.source ?? ""} ${alert.host ?? ""} ${alert.rule ?? ""}`.toLowerCase().includes(query.toLowerCase())
+  ), [query]);
   const selected = alerts.find((a) => a.id === selectedId) ?? alerts[0];
 
   function notify(message: string) {
@@ -373,11 +357,9 @@ export default function App() {
   function askCopilot(text = prompt) {
     if (!text.trim()) return;
     setPrompt("");
-    setCopilotAnswer(
-      text.toLowerCase().includes("stakeholder")
-        ? `A high-risk identity alert involving ${selected.user} is under investigation. Access has not yet been confirmed as malicious. The team is revoking the suspicious application's access and validating activity with the user.`
-        : `The strongest evidence is the combination of an anonymized sign-in, a newly registered application, and the ${selected.indicators.slice(0, 2).join(" / ")} indicators. This pattern is consistent with consent phishing rather than normal application adoption.`
-    );
+    setCopilotAnswer(alertResult
+      ? "Use the analyzed verdict, verified evidence, and next steps shown in the result card."
+      : "Press Analyze first so TalosAI can generate a verdict and evidence from the original alert.");
   }
 
   async function analyzeAlert() {
@@ -438,33 +420,29 @@ export default function App() {
         <div className={`workspace ${assistantOpen ? "" : "assistant-closed"}`}>
           <section className="queue-panel">
             <div className="panel-heading">
-              <div><H2>Alert queue</H2><p>{filtered.length} alerts shown</p></div>
+              <div><H2>Alert queue</H2><p>{visibleAlerts.length} alerts shown</p></div>
               <AppButton variant="secondary"><Icon name="bolt" size={15} /> Run automation</AppButton>
             </div>
-            <div className="filters">
-              {(["All", "Critical", "High", "Medium", "Low"] as const).map((item) => <Button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</Button>)}
-            </div>
             <div className="alert-list">
-              {filtered.map((alert) => (
+              {visibleAlerts.map((alert) => (
                 <Button key={alert.id} className={`alert-row ${selected.id === alert.id ? "selected" : ""}`} onClick={() => selectAlert(alert.id)}>
-                  <span className={`risk-line ${alert.severity.toLowerCase()}`} />
                   <span className="alert-main">
-                    <span className="alert-title-line"><strong>{alert.title}</strong><SeverityPill severity={alert.severity} /></span>
+                    <span className="alert-title-line"><strong>{alert.title}</strong></span>
                     <span className="alert-meta">{alert.source}<i />{alert.id}</span>
                   </span>
-                  <span className="alert-side"><span>{alert.time}</span><small>{alert.status}</small></span>
+                  <span className="alert-side tool-rating"><small>Wazuh rated:<br />{alert.toolRating}</small></span>
                 </Button>
               ))}
-              {filtered.length === 0 && <div className="empty-state">No alerts match your search.</div>}
+              {visibleAlerts.length === 0 && <div className="empty-state">No alerts match your search.</div>}
             </div>
           </section>
 
           <section className="detail-panel">
             <div className="detail-head">
               <div className="detail-breadcrumb"><span>{selected.id}</span><Icon name="chevron" size={14} /><span>{selected.source}</span></div>
-              <div className="detail-title"><div><SeverityPill severity={selected.severity} /><H2>{selected.title}</H2></div><div className="risk-score"><span>Risk score</span><strong>{selected.score}</strong><small>/100</small></div></div>
+              <div className="detail-title"><div><H2>{selected.title}</H2></div><div className="wazuh-rating"><span>Wazuh rated</span><strong>{selected.toolRating}</strong></div></div>
               <div className="entity-row">
-                <span><Icon name="user" size={15} />{selected.user}</span><span><Icon name="device" size={15} />{selected.asset}</span><span><Icon name="clock" size={15} />{selected.time}</span>
+                <span><Icon name="device" size={15} />{selected.host}</span><span><Icon name="shield" size={15} />{selected.source}</span><span><Icon name="clock" size={15} />{selected.time}</span>
               </div>
             </div>
 
@@ -474,32 +452,13 @@ export default function App() {
                 <label className="composer-input"><span>Or paste alert text</span><Textarea value={alertInput} onChange={(event) => setAlertInput(event.target.value)} placeholder="Paste alert JSON or event details..." /></label>
                 <AnalyzeButton loading={alertLoading} onClick={analyzeAlert} />
               </div>
-              {(alertResult || alertFailed) ? <ResultCard result={alertResult} error={alertFailed} onCopy={() => { navigator.clipboard.writeText(alertResult?.plain_english ?? ""); notify("Plain-English analysis copied"); }} /> : <div className="ai-summary">
-                <div className="summary-label"><span><Icon name="spark" size={16} /> AI summary</span><Button onClick={() => notify("Summary copied to clipboard")} aria-label="Copy summary"><Icon name="copy" size={15} /></Button></div>
-                <p>{selected.summary}</p>
-                <div className="confidence"><span><Icon name="check" size={13} /> High confidence</span><small>Based on 14 correlated signals</small></div>
-              </div>}
-
-              <div className="detail-section">
-                <H3>What happened</H3>
-                <div className="timeline">
-                  {selected.timeline.map((event, index) => <div className="timeline-item" key={event.time + event.text}><time>{event.time}</time><span className={`timeline-dot ${event.tone}`} />{index < selected.timeline.length - 1 && <span className="timeline-line" />}<p>{event.text}</p></div>)}
-                </div>
+              <div className="alert-fields">
+                <div><span>Rule</span><strong>{selected.rule}</strong></div>
+                <div><span>Host</span><strong>{selected.host}</strong></div>
+                <div><span>Time</span><strong>{selected.time}</strong></div>
+                <div className="alert-log"><span>Log</span><code>{selected.log || "No log text provided"}</code></div>
               </div>
-
-              <div className="detail-section">
-                <H3>Key indicators <span>{selected.indicators.length}</span></H3>
-                <div className="indicator-grid">{selected.indicators.map((item) => <Button key={item} onClick={() => notify(`${item} copied`)}><span>{item}</span><Icon name="copy" size={13} /></Button>)}</div>
-              </div>
-
-              <div className="recommendation">
-                <span className="recommendation-icon"><Icon name="bolt" size={17} /></span>
-                <div><H3>Recommended next step</H3><p>{selected.recommendation}</p></div>
-              </div>
-            </div>
-            <div className="action-bar">
-              <AppButton onClick={() => notify("Alert marked as benign")}>Mark as benign</AppButton>
-              <AppButton variant="primary" onClick={() => notify("Containment workflow started")}><Icon name="shield" size={15} /> Start containment</AppButton>
+              {(alertResult || alertFailed) ? <ResultCard result={alertResult} error={alertFailed} onCopy={() => { navigator.clipboard.writeText(alertResult?.plain_english ?? ""); notify("Plain-English analysis copied"); }} /> : <div className="analysis-waiting alert-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see the verdict and evidence.</p></div>}
             </div>
           </section>
 
