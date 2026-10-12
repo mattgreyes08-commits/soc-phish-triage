@@ -143,3 +143,14 @@ test("malware numbers must come from the profile", async () => {
   assert.equal(r.risk_score, null);
   assert.equal(r.scoring.unverified_numbers, undefined);
 });
+
+test("notable features from the real MalMem profiles", async () => {
+  const { notableFeatures } = await import("./prompts.ts");
+  const { readFileSync } = await import("node:fs");
+  const profiles = JSON.parse(readFileSync(new URL("./malware_profiles.json", import.meta.url), "utf8"));
+  const higher = (t: string) => notableFeatures(profiles[t]).filter((f) => f.direction === "higher").map((f) => f.feature);
+  assert.ok(higher("Spyware").includes("malfind.ninjections"));
+  assert.ok(higher("Ransomware").includes("malfind.ninjections"));
+  assert.deepEqual(higher("Trojan"), []); // Trojans blend in: nothing higher than normal
+  assert.ok(notableFeatures(profiles.Trojan).every((f) => f.direction === "lower"));
+});

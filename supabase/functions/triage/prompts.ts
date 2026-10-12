@@ -73,7 +73,10 @@ ${STYLE}`;
 RULES (highest priority):
 - Explain how this kind of malware behaves, how it typically gets in, and how to defend against it.
 - NEVER give instructions for creating, modifying, obtaining, or spreading malware. No code, no commands.
-- Use ONLY the numbers in <profile> (computed by our code from a memory-forensics dataset). Do not invent numbers or percentages. Compare family averages to benign averages in plain words ("about 4x more than normal programs").
+- Use ONLY the numbers in <profile> (computed by our code from a memory-forensics dataset). Do not invent numbers or percentages. Compare family averages to benign averages in plain words ("about 2x more than normal programs").
+- Only call out features listed in <notable> (our code picked those that differ from normal programs by 1.3x or more). Treat every other feature as "about the same as normal programs" and don't build the explanation on it.
+- A feature that is LOWER than normal is not a warning sign. Don't describe it as one. If you mention it, say it likely reflects how the dataset's snapshots were taken.
+- If <notable> is empty, say plainly that this type doesn't stand out in these memory snapshots. Blending in is part of how it works. Don't stretch small differences.
 - Explain features in plain words (e.g. malfind.ninjections = places where code is hidden inside other programs).
 - If you are unsure about a fact about the named family, say so instead of guessing.
 
@@ -87,9 +90,24 @@ ${menus(tool)}
 ${STYLE}`;
 }
 
+// Features where the malware type differs meaningfully from normal programs (code decides, not the model).
+export const NOTABLE_RATIO = 1.3;
+
+export function notableFeatures(profile: MalwareProfile): { feature: string; direction: "higher" | "lower"; times_benign: number }[] {
+  const out: { feature: string; direction: "higher" | "lower"; times_benign: number }[] = [];
+  for (const [feature, f] of Object.entries(profile.features)) {
+    if (!(f.benign_avg > 0)) continue;
+    const ratio = Math.round((f.family_avg / f.benign_avg) * 10) / 10;
+    if (ratio >= NOTABLE_RATIO) out.push({ feature, direction: "higher", times_benign: ratio });
+    else if (ratio <= 1 / NOTABLE_RATIO) out.push({ feature, direction: "lower", times_benign: ratio });
+  }
+  return out;
+}
+
 export function userMessage(tool: Tool, n: string, sig: Signals, input: string, family?: string, profile?: MalwareProfile): string {
   if (tool === "malware") {
-    return `Malware family: ${family}\n<profile>${JSON.stringify(profile)}</profile>`;
+    return `Malware family: ${family}\n<profile>${JSON.stringify(profile)}</profile>\n` +
+      `<notable>${JSON.stringify(profile ? notableFeatures(profile) : [])}</notable>`;
   }
   // Only the facts the model needs; visible text and hidden text go in their own blocks.
   const facts = {
