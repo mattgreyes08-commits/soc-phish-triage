@@ -37,7 +37,7 @@ If Claude is unreachable, the function returns a labeled rules-only verdict inst
 | Test | Result |
 |---|---|
 | **Blind phishing test**: 18 emails written by the team, graded against a hidden answer key | **18/18**, including both AI-manipulation traps (v1 17/18 → v2 17/18 → v3 18/18 after fixing one false alarm) |
-| **Accuracy on real labeled email**: balanced random sample of 40 from CEAS-08 (seed 7), live backend | **37/40** agreed with the dataset's labels. Caught **20/20** spam/phishing; 3 legitimate marketing or mailing-list emails were flagged as spam/suspicious |
+| **Accuracy on real labeled email**: balanced random samples of 40 (20 bad + 20 legitimate, seed 7) from two independent datasets, live backend | **CEAS-08: 37/40** and **SpamAssassin: 39/40** (76/80 overall). Caught **40/40** spam/phishing across both; all 4 misses were legitimate marketing, newsletter or mailing-list emails flagged as spam/suspicious |
 | **Real alerts**: 5 Wazuh alerts from the AIT Alert Data Set, expected severity set by the team | **5/5**. The alert for reading `/etc/shadow` as root was rated **3/15 (low) by Wazuh** and **critical (92) by TriageLens** |
 | **Malware explanations**: Ransomware, Spyware, Trojan | All numbers come from the original MalMem2022.csv (no synthetic rows); facts checked by CS 2 |
 
