@@ -8,10 +8,12 @@ Inputs (keys become the dropdown labels, so number them in demo-script order):
   samples/phishing_demo_picks.json  {"1. Real shipping notice": "email text", ...}  Enrique's picks
                                     (falls back to samples/phishing.json, all 18 blind emails)
   samples/malware.json         ["Ransomware-Shade", ...]              family names from CS 2
-Results are cached in data/cache/ by input + model + mode, so reruns only call Claude for what changed.
+Results are cached in data/cache/ by input + model + mode. The cache does NOT know about prompt changes:
+after a redeploy, run with --fresh so every result comes from the new prompts.
 """
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 from triage_client import MODEL, mode, triage
@@ -41,7 +43,7 @@ for tool, items in inputs.items():
     for label, text in items.items():
         key = hashlib.sha256(f"{tool}|{text}|{MODEL}|{mode()}".encode()).hexdigest()[:16]
         cached = CACHE / f"{key}.json"
-        if cached.exists():
+        if cached.exists() and "--fresh" not in sys.argv:
             out = json.loads(cached.read_text())
             note = "cached"
         else:
