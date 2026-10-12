@@ -5,7 +5,8 @@ Run: .venv/bin/python make_demo_results.py
 
 Inputs (keys become the dropdown labels, so number them in demo-script order):
   samples/alerts.json          made by prep_alerts.py
-  samples/phishing.json        {"1. Fake PayPal": "email text", ...}  from Improv 2
+  samples/phishing_demo_picks.json  {"1. Real shipping notice": "email text", ...}  Enrique's picks
+                                    (falls back to samples/phishing.json, all 18 blind emails)
   samples/malware.json         ["Ransomware-Shade", ...]              family names from CS 2
 Results are cached in data/cache/ by input + model + mode, so reruns only call Claude for what changed.
 """
@@ -27,7 +28,7 @@ def load(name, default):
 
 inputs = {
     "alert": {label: json.dumps(alert, indent=2) for label, alert in load("alerts.json", {}).items()},
-    "phishing": load("phishing.json", {}),
+    "phishing": load("phishing_demo_picks.json", None) or load("phishing.json", {}),  # Enrique's dropdown picks
     "malware": {family: family for family in load("malware.json", [])},
 }
 
