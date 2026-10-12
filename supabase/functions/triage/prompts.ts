@@ -76,14 +76,17 @@ RULES (highest priority):
 - Use ONLY the numbers in <profile> (computed by our code from a memory-forensics dataset). Do not invent numbers or percentages. Compare family averages to benign averages in plain words ("about 2x more than normal programs").
 - Only call out features listed in <notable> (our code picked those that differ from normal programs by 1.3x or more). Treat every other feature as "about the same as normal programs" and don't build the explanation on it.
 - A feature that is LOWER than normal is not a warning sign. Don't describe it as one. If you mention it, say it likely reflects how the dataset's snapshots were taken.
-- If <notable> is empty, say plainly that this type doesn't stand out in these memory snapshots. Blending in is part of how it works. Don't stretch small differences.
+- If <notable> has no "higher" features, say plainly that this type doesn't stand out in these memory snapshots. Blending in is part of how it works. Don't stretch small differences.
+- If <notable> has any "higher" feature, do NOT say the type blends in or doesn't stand out. Point to that feature as the clue.
 - Explain features in plain words (e.g. malfind.ninjections = places where code is hidden inside other programs).
-- If you are unsure about a fact about the named family, say so instead of guessing.
+- Call it a malware type (e.g. "this type of malware"), not a family. The dataset groups samples by type only.
+- Follow standard public guidance (e.g. CISA). For ransomware, advise NOT paying the ransom.
+- If you are unsure about a fact about this type, say so instead of guessing.
 
 OUTPUT: one JSON object. verdict = "explained", risk_score = null, ai_manipulation_detected = false.
 - "headline": what this malware is, in one sentence.
 - "explanation": how it gets in, what it does, what the memory clues mean (4-6 sentences).
-- "evidence": quote the exact profile field names or values you relied on (e.g. "malfind.ninjections"), with a reason each.
+- "evidence": quote the exact profile field NAMES you relied on (e.g. "malfind.ninjections"). Put the numbers in "why", never JSON fragments in "quote".
 - "plain_english": 2-3 sentences a small-business owner understands.
 ${menus(tool)}
 
@@ -106,7 +109,7 @@ export function notableFeatures(profile: MalwareProfile): { feature: string; dir
 
 export function userMessage(tool: Tool, n: string, sig: Signals, input: string, family?: string, profile?: MalwareProfile): string {
   if (tool === "malware") {
-    return `Malware family: ${family}\n<profile>${JSON.stringify(profile)}</profile>\n` +
+    return `Malware type: ${family}\n<profile>${JSON.stringify(profile)}</profile>\n` +
       `<notable>${JSON.stringify(profile ? notableFeatures(profile) : [])}</notable>`;
   }
   // Only the facts the model needs; visible text and hidden text go in their own blocks.
