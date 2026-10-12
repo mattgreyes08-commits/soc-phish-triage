@@ -19,6 +19,7 @@ It started as the v1 "Role B" interview spec. It is now updated for Team Guide v
 | Roles A/B/C/D | **CS 1** Backend · **CS 2** Malware + prompt pair · **Improv 1** UI + demo driver · **Improv 2** Phishing + prompt pair + pitch | The v1 "Role B" work is now split between CS 1 (function, verifier, floors, eval) and the prompt pair (CS 2 + Improv 2) |
 | `cache/*.json` keyed by hash | **`demo_results.json`**, pasted into Figma Make's Demo-mode toggle | Cache keyed by demo input id. Hash key kept only in the Python scripts |
 | Naive-chatbot side-by-side was core | It is a **stretch** goal | Do it only after the must-haves pass |
+| Alerts were hand-written samples | TriageLens is **tested against [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)**, a local lab of deliberately vulnerable AI agents | DVAA attack-log entries become the real Alerts input. DVAA's payloads also red-team our own prompts. See §10a |
 
 ## 1. Decisions at a glance
 
@@ -156,6 +157,9 @@ For malware, use `<profile>{...}</profile>` with the family name instead.
 |---|---|
 | Phishing | T1566.001, T1566.002, T1566.003, T1598, T1598.002, T1598.003, T1656, T1204.001, T1204.002, T1534, T1036 |
 | Alerts | T1059.001, T1110, T1078, T1486, T1566.002, T1204.002, T1027, T1071.001, T1021 |
+| Alerts from DVAA (MITRE **ATLAS**, AI-specific) | AML.T0051 (LLM Prompt Injection; .000 direct / .001 indirect), AML.T0054 (LLM Jailbreak), AML.T0057 (LLM Data Leakage), AML.T0056 (LLM Meta Prompt Extraction), AML.T0053 (LLM Plugin Compromise), AML.T0010 (ML Supply Chain Compromise) |
+
+The DVAA IDs and names were written from memory. Check each one at atlas.mitre.org before it goes into the allowlist or onto a slide.
 
 Confirm every ID at attack.mitre.org before it appears on a slide.
 
@@ -273,6 +277,74 @@ Do this only after all the must-haves pass:
 - **Show it honestly.** Label it "Recorded run · <model> · plain prompt", with the exact prompt visible.
 - **If nothing is fooled,** skip the comparison and show the hidden/AI-directed line with TriageLens catching it. **Never fake a failure.**
 
+## 10a. DVAA: the test target
+
+**What it is.** [Damn Vulnerable AI Agent](https://github.com/opena2a-org/damn-vulnerable-ai-agent) is maintained by OpenA2A and licensed Apache-2.0. It is a local fleet of 21 deliberately vulnerable AI agents, described as the DVWA of AI agents. It covers 12 vulnerability categories, including prompt injection, jailbreak, data exfiltration, MCP path traversal/SSRF, A2A attacks, memory injection, context overflow, and tool poisoning/MITM. It also has a CTF with 22 challenges. It fits the event theme (AI defending against threats AI creates) better than any hand-written alert.
+
+**Run it locally only:**
+```bash
+docker run -p 127.0.0.1:9000:9000 -p 127.0.0.1:7001-7021:7001-7021 opena2a/dvaa:0.9.2
+# or: npm install -g damn-vulnerable-ai-agent && dvaa
+open http://localhost:9000          # dashboard + attack log
+OPENA2A_TELEMETRY=off dvaa ...      # turn telemetry off if venue rules require it
+```
+
+**Ports and endpoints:**
+- Agents listen on 7001–7021, and the dashboard on 9000.
+- Agents speak the OpenAI-compatible chat API: `POST /v1/chat/completions`.
+- The MCP agents (7010–7013) take JSON-RPC at `POST /`.
+- The A2A agents (7020–7021) take `POST /a2a/message`.
+
+**Modes:**
+- Default mode is simulated and deterministic, with no key needed. **Use it for the demo.**
+- LLM mode takes an Anthropic key in the dashboard's Settings, or `dvaa chat --llm` with `$ANTHROPIC_API_KEY`.
+
+### How TriageLens uses it
+
+**1. DVAA attack logs become real alerts for the Alerts tab.**
+
+*Collect (CS 1, by 12:15):*
+```bash
+dvaa attack legacybot --intensity aggressive     # also: helperbot, toolbot, orchestrator
+dvaa logs --json --limit 50 > data/dvaa_logs.json
+```
+
+*Convert:* `prep_alerts.py` turns each log entry into an alert in the page 20 shape:
+- **Direct fields:** `alert_id`, `time`, `source: "DVAA <agent>"`, `rule` (the attack category / OASB control)
+- **`payload`:** the attack text, **treated as untrusted input**
+- **`response_excerpt`:** with any leaked fake secrets **redacted to `[REDACTED-SECRET]`** before Claude or the UI sees them
+- **`target`:** agent and port
+- **`outcome`:** `blocked` or `succeeded`
+
+*Pick 5 demo alerts across severities:*
+
+| Demo alert | Expected severity |
+|---|---|
+| LegacyBot credential leak (succeeded) | critical |
+| ToolBot MCP path traversal `/etc/passwd` | high |
+| Orchestrator A2A "I am the admin agent" | high |
+| HelperBot prompt injection | medium |
+| The same payload **blocked** by SecureBot | low |
+
+The last row shows the tool doesn't cry wolf.
+
+*Pitch line:* "These aren't made-up alerts. They are real attack logs from a vulnerable AI-agent lab, translated for Maya."
+
+**2. DVAA payloads red-team TriageLens itself.**
+- DVAA alert payloads *are* prompt injections. An alert containing "ignore previous instructions" must be summarized as an attack, not obeyed.
+- The `ai_phrases` scan and the `ai_instruction` floor (§6) apply to alert payload fields too.
+- Add 2 DVAA payloads to `samples/expected.json` as injection regression tests. The expected result: `ai_manipulation_detected=true`, and the summary describes the attack.
+- If a payload ever changes TriageLens's own behavior, fix the prompt and record it in the test table. "We attacked ourselves with DVAA" is strong pitch material.
+
+**3. Optional: an SOC-for-AI-agents angle (pitch only, no build).** MSP clients are starting to deploy AI agents, and their alerts will look like DVAA's. This goes on the roadmap slide.
+
+### Rules for using DVAA
+- Bind to `127.0.0.1` only. Never expose DVAA on the venue Wi-Fi or the internet.
+- Its secrets are fake, but still redact them in slides, the UI, and `demo_results.json`, so nothing looks like a real leak on screen.
+- `data/dvaa_logs.json` stays out of Git (it is covered by `data/`). Only the redacted, prepped demo alerts get committed.
+- Run the demo from saved logs, in demo mode. Don't run live attacks on stage.
+- Check ports 9000 and 7001–7021 are free before the event. Use `HOST_PORT_OFFSET` together with matching `-p` flags if they collide.
+
 ## 11. Security hygiene
 
 - The Claude key lives only in the Supabase secret named `ANTHROPIC_API_KEY`. It never goes in prompts, Figma chats, slides or Git.
@@ -301,3 +373,5 @@ Do this only after all the must-haves pass:
 - Confirm with Improv 1: add `"suspicious"` to the verdicts and colors.
 - Confirm with organizers: the exact deadline, the submission format, whether AI tools and Figma Make are allowed, and whether API keys or credits are provided.
 - Confirm on Kaggle: the spam dataset's label values, and whether the malware dataset is CIC-MalMem-2022.
+- Confirm with organizers what "tested against DVAA" means. Is it the source of judging inputs, or do judges run DVAA payloads at our tool? Does a specific DVAA version, agent set or CTF tie-in matter? And is Claude confirmed as the LLM?
+- Confirm `dvaa logs --json` field names on the real install. Build `prep_alerts.py` against them, not against this spec's guesses.
