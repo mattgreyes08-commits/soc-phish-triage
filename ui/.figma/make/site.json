@@ -1,0 +1,10 @@
+{
+  "description": "This web application streamlines security analysis by summarizing alerts, triaging phishing emails, and explaining malware in simple terms, enhancing efficiency for analysts.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
