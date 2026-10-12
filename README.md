@@ -30,27 +30,27 @@ Figma Make app ──POST {tool, input}──▶ Supabase Edge Function "triage"
 4. **Code has the final word.** Rule-based minimum scores: if code finds an AI-directed instruction, the score can't go below 80; reading `/etc/shadow` in an alert is always critical.
 5. **Outputs are verified.** Every evidence quote must appear in the source, character for character, or it is dropped. Malware numbers must come from the dataset profile.
 
-If Claude is unreachable, the function returns a labeled rules-only verdict instead of an error. The app's **Demo mode** uses saved results and works with Wi-Fi off.
+If Claude is unreachable, the function returns a labeled rules-only verdict instead of an error. The app's **Demo mode** uses saved results stored in the app, so it is designed to work offline (being verified with Wi-Fi off).
 
 ## Results
 
 | Test | Result |
 |---|---|
-| **Blind phishing test**: 18 emails written by the team, graded against a hidden answer key | **18/18**, including both AI-manipulation traps (v1 17/18 → v2 17/18 → v3 18/18 after fixing one false alarm) |
+| **Team-written phishing test**: 18 emails, scored against an answer key written before the first run | **17/18 on the first run** (one false alarm on a real IT newsletter). After fixing that miss: 18/18, but that second score is tuned on the same emails, so treat 17/18 as the unbiased number |
 | **Accuracy on real labeled email**: balanced random samples of 40 (20 bad + 20 legitimate, seed 7) from two independent datasets, live backend | **CEAS-08: 37/40** and **SpamAssassin: 39/40** (76/80 overall). Caught **40/40** spam/phishing across both; all 4 misses were legitimate marketing, newsletter or mailing-list emails flagged as spam/suspicious |
-| **Real alerts**: 5 Wazuh alerts from the AIT Alert Data Set, expected severity set by the team | **5/5**. The alert for reading `/etc/shadow` as root was rated **3/15 (low) by Wazuh** and **critical (92) by TriageLens** |
+| **Lab-generated alerts**: 5 Wazuh alerts from the AIT Alert Data Set (a simulated multi-step attack in a research testbed), expected severity set by the team | **5/5**. The alert for reading `/etc/shadow` as root was rated **3/15 (low) by Wazuh** and **critical (92) by TriageLens** |
 | **Malware explanations**: Ransomware, Spyware, Trojan | All numbers come from the original MalMem2022.csv (no synthetic rows); facts checked by CS 2 |
 
-The spam dataset labels spam and phishing together, so the accuracy number measures "caught bad email", not "told phishing apart from spam". The blind test checks that distinction.
+The spam dataset labels spam and phishing together, so the accuracy number measures "caught bad email", not "told phishing apart from spam". The team-written test checks that distinction.
 
 ## Datasets
 
 | Dataset | Used for | Source |
 |---|---|---|
 | **Phishing Email Dataset** (Enron, Ling, CEAS-08, Nazario, Nigerian Fraud, SpamAssassin) | Phishing demo samples and accuracy testing | Kaggle: [naserabdullahalam/phishing-email-dataset](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset) |
-| **AIT Alert Data Set (AIT-ADS)** by Landauer, Skopik and Wurzenberger, AIT Austrian Institute of Technology | The 5 real Alerts-tab samples (scenario `russellmitchell`) | Zenodo: [doi:10.5281/zenodo.8263181](https://doi.org/10.5281/zenodo.8263181), CC BY 4.0 (citation below) |
+| **AIT Alert Data Set (AIT-ADS)** by Landauer, Skopik and Wurzenberger, AIT Austrian Institute of Technology; shared with hackathon teams by CrowdStrike | The 5 Alerts-tab samples (lab-generated, realistic) (scenario `russellmitchell`) | Zenodo: [doi:10.5281/zenodo.8263181](https://doi.org/10.5281/zenodo.8263181), CC BY 4.0 (citation below) |
 | **MalMem augmented 5-class dataset**, based on CIC-MalMem-2022 (obfuscated malware memory analysis) | Per-type averages behind the malware explanations. **We used only the original `MalMem2022.csv` from this page, not the synthetic/augmented files.** | Kaggle: [shanmukhadattaboda/malmem-augmneted-5-class-datasets](https://www.kaggle.com/datasets/shanmukhadattaboda/malmem-augmneted-5-class-datasets); original by the Canadian Institute for Cybersecurity |
-| Team-written blind test (18 emails) | Blind accuracy test | `samples/phishing_demo.txt`, `samples/answer_key.txt` |
+| Team-written test (18 emails) | Phishing / spam / suspicious / legitimate test | `samples/phishing_demo.txt`, `samples/answer_key.txt` |
 
 **Citing AIT-ADS.** Used under CC BY 4.0. As its authors ask, we cite:
 
@@ -74,7 +74,7 @@ supabase/functions/triage/   the live backend (Deno/TypeScript)
   malware_profiles.json        output of prep_malware.py
   triage.test.ts               offline tests (no API key needed)
 prompts/style_guide.md       shared voice for all three tools
-samples/                     demo inputs, blind test, answer key
+samples/                     demo inputs, team-written test, answer key
 triage_client.py             Python helper: calls the live function (or Claude directly as a fallback)
 explore.py                   dataset summary + demo-email candidates
 prep_alerts.py               picks the 5 demo alerts from AIT-ADS
@@ -120,6 +120,6 @@ npx supabase functions deploy triage --use-api
 | Backend lead: deployment, score floors, evaluation, demo results | Neil Syal |
 | Malware lead + prompt design: function, malware profiles, prompts | Shreyas |
 | UI lead (Figma Make) + demo driver | Enrique |
-| Phishing lead + prompt design + pitch: blind test, demo picks | Matthew |
+| Phishing lead + prompt design + pitch: team-written test, demo picks | Matthew |
 
 Built with Claude (Anthropic), Figma Make and Supabase.

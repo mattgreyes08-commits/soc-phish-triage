@@ -57,8 +57,9 @@ const SHORTENERS = new Set([
 ]);
 
 // Tier 1: instruction-shaped text. Floors the score with no LLM needed.
-// "ignore previous instructions ABOUT the old ticket page" is ordinary office wording, so a topic word after it doesn't count.
-const NOT_A_TOPIC = String.raw`\b(?!\s+(?:about|regarding|for|on|concerning|re)\b)`;
+// "ignore previous instructions ABOUT the old ticket page" is ordinary office wording, so a topic word after it doesn't count,
+// unless the topic is the message itself ("...about this email" is still an attack). 0 hits on 15,791 legit Enron emails.
+const NOT_A_TOPIC = String.raw`\b(?!\s+(?:about|regarding|for|on|concerning|re)\b(?!\s+(?:this|the|that|these)\s+(?:email|e-mail|message|mail|alert|ticket|sender|request)s?\b))`;
 const STRONG_AI = [
   new RegExp(String.raw`ignore\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|earlier|your)\s+(?:instructions|rules|prompts?)` + NOT_A_TOPIC, "gi"),
   new RegExp(String.raw`disregard\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|your)\s+(?:instructions|rules|prompts?)` + NOT_A_TOPIC, "gi"),
