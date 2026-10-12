@@ -190,11 +190,19 @@ function rulesOnly(
   }
 
   const floors = floorsFor(tool, sig, false);
-  const score = rulesOnlyScore(sig, floors);
+  // A safety refusal is not "nothing found": obfuscated pharma spam often trips it. Send it to a person instead.
+  const refused = /refused/i.test(note ?? "");
+  const score = refused ? Math.max(50, rulesOnlyScore(sig, floors)) : rulesOnlyScore(sig, floors);
   const base = tool === "alert" ? (score >= 70 ? "high" : score >= 40 ? "medium" : "low")
     : score >= 40 ? "suspicious" : sig.keyword_hits.length ? "suspicious" : "legitimate";
   const verdict = adjustVerdict(tool, base, score, sig, floors);
-  const { headline, plain } = template(tool, verdict, floors);
+  let { headline, plain } = template(tool, verdict, floors);
+  if (refused && !floors.length) {
+    headline = "The AI declined to analyze this; a person should review it";
+    plain = tool === "alert"
+      ? "Our AI couldn't analyze this alert automatically, which is unusual. A technician should look at it today."
+      : "Our AI couldn't analyze this email automatically, which is unusual. Please don't click or reply until someone has checked it.";
+  }
   const evidence = sig.ai_phrases
     .filter((p) => p.strength === "strong" || p.hidden)
     .map((p) => ({ quote: p.text, why: "Instruction aimed at AI tools", source: p.hidden ? "hidden" : "body", verified: true }));

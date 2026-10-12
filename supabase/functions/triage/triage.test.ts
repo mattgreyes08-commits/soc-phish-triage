@@ -128,6 +128,15 @@ test("API failure gives a labeled rules-only verdict, not an error", async () =>
   assert.ok(r.evidence.length > 0);
 });
 
+test("a safety refusal on a plain email is sent to a person, not marked legitimate", async () => {
+  const refusing = (async () => { throw new Error("refused (bio)"); }) as unknown as CallClaude;
+  const r = await runTriage({ tool: "phishing", input: "Bu y M edic ine On line. Vis it to le arn mo re" }, refusing, {});
+  assert.equal(r.scoring.mode, "rules_only");
+  assert.equal(r.verdict, "suspicious");
+  assert.ok((r.risk_score ?? 0) >= 50);
+  assert.match(r.headline, /person should review/);
+});
+
 test("alert with an injection payload is at least high severity", async () => {
   const alert = JSON.stringify({
     alert_id: "DVAA-1", source: "DVAA HelperBot", rule: "Prompt injection",
