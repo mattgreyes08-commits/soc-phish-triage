@@ -196,3 +196,16 @@ test("alert rules: credential theft is critical, web-account pivot is high, rout
   const r2 = await runTriage({ tool: "alert", input: pivot }, low2, {});
   assert.equal(r2.verdict, "high");
 });
+
+test("alert IPs are labeled internal or external for the prompt", async () => {
+  const { classifyIps } = await import("./prompts.ts");
+  assert.deepEqual(
+    classifyIps("from 172.19.131.174 and 192.168.1.5 to 203.0.113.45, again 172.19.131.174, bogus 999.1.1.1"),
+    [
+      { ip: "172.19.131.174", network: "internal" },
+      { ip: "192.168.1.5", network: "internal" },
+      { ip: "203.0.113.45", network: "external" },
+    ],
+  );
+  assert.equal(classifyIps("172.32.0.1")[0].network, "external"); // just outside 172.16.0.0/12
+});

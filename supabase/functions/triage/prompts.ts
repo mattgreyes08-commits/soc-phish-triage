@@ -58,6 +58,7 @@ HOW TO JUDGE:
 - Base every statement on fields in the alert. If information is missing, say what an analyst should check next. Do not guess.
 - Judge severity yourself. "severity_from_tool" is often wrong (tools under-rate real attacks), so never copy it.
 - Parsed fields like "details" can be mis-split by the log tool; trust the raw "log" line when they disagree.
+- <signals>.ip_addresses says which addresses are internal (inside the company network) and which are external. Never describe an internal address as "on the internet" or "outside". Say "a computer on your network".
 - verdict = severity, using this rubric:
   - "critical": an attacker likely has deep access or is causing harm now, e.g. password hashes or credential stores read (/etc/shadow, SAM, LSASS), root/admin gained by an attacker, files being encrypted, data being stolen.
   - "high": likely compromise needing action today, e.g. a web or service account (www-data, apache, IUSR) switching to a person's account or spawning shells, commands run from a website's upload folder, successful brute-force login, malicious script launched.
@@ -86,7 +87,7 @@ RULES (highest priority):
 - If <notable> has no "higher" features, say plainly that this type doesn't stand out in these memory snapshots. Blending in is part of how it works. Don't stretch small differences.
 - If <notable> has any "higher" feature, do NOT say the type blends in or doesn't stand out. Point to that feature as the clue.
 - Explain features in plain words (e.g. malfind.ninjections = places where code is hidden inside other programs).
-- Call it a malware type (e.g. "this type of malware"), not a family. The dataset groups samples by type only.
+- Call it a malware type (e.g. "this type of malware"). Never use the word "family": the dataset groups samples by type only.
 - Follow standard public guidance (e.g. CISA). For ransomware, advise NOT paying the ransom.
 - If you are unsure about a fact about this type, say so instead of guessing.
 
@@ -114,9 +115,23 @@ export function notableFeatures(profile: MalwareProfile): { feature: string; dir
   return out;
 }
 
+// Private ranges (RFC 1918 + loopback) are inside the company network; everything else is external.
+export function classifyIps(text: string): { ip: string; network: "internal" | "external" }[] {
+  const seen = new Set<string>();
+  const out: { ip: string; network: "internal" | "external" }[] = [];
+  for (const m of text.matchAll(/\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b/g)) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if ([m[1], m[2], m[3], m[4]].some((o) => Number(o) > 255) || seen.has(m[0])) continue;
+    seen.add(m[0]);
+    const internal = a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+    out.push({ ip: m[0], network: internal ? "internal" : "external" });
+  }
+  return out;
+}
+
 export function userMessage(tool: Tool, n: string, sig: Signals, input: string, family?: string, profile?: MalwareProfile): string {
   if (tool === "malware") {
-    return `Malware type: ${family}\n<profile>${JSON.stringify(profile)}</profile>\n` +
+    return `Malware type: ${family} (a type, not a family)\n<profile>${JSON.stringify(profile)}</profile>\n` +
       `<notable>${JSON.stringify(profile ? notableFeatures(profile) : [])}</notable>`;
   }
   // Only the facts the model needs; visible text and hidden text go in their own blocks.
@@ -132,6 +147,7 @@ export function userMessage(tool: Tool, n: string, sig: Signals, input: string, 
     zero_width_chars: sig.zero_width_chars,
     tag_like_text: sig.tag_like_text,
     ...(tool === "alert" && {
+      ip_addresses: classifyIps(input),
       encoded_powershell: sig.encoded_powershell,
       office_spawned_script: sig.office_spawned_script,
       mass_rename: sig.mass_rename,
