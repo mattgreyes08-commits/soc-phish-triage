@@ -65,6 +65,7 @@ Raw datasets are not committed (`data/` is in `.gitignore`). Links in team-writt
 ## Repo layout
 
 ```
+ui/                          the web app (React + Vite, built in Figma Make by Enrique; main code in ui/src/App.tsx)
 supabase/functions/triage/   the live backend (Deno/TypeScript)
   index.ts                     HTTP handler, CORS
   triage.ts                    pipeline: signals → Claude → verify → floors → result
