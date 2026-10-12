@@ -357,6 +357,7 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [view, setView] = useState("Overview");
   const [demoMode, setDemoMode] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [alertInput, setAlertInput] = useState(alerts[0].input);
   const [alertResult, setAlertResult] = useState<TriageResult | null>(null);
   const [alertLoading, setAlertLoading] = useState(false);
@@ -420,6 +421,7 @@ export default function App() {
         </nav>
         <div className="sidebar-bottom">
           <Button className="nav-item"><Icon name="settings" /><span>Settings</span></Button>
+          <Button className="about-link" onClick={() => setAboutOpen(true)}>About TriageLens</Button>
           <div className="profile">
             <div className="avatar">AK</div><div><strong>Alex Kim</strong><small>Security analyst</small></div><span className="online-dot" />
           </div>
@@ -535,6 +537,12 @@ export default function App() {
         </div>
         </>}
       </main>
+      {aboutOpen && <div className="about-overlay" onClick={() => setAboutOpen(false)}>
+        <section className="about-panel" role="dialog" aria-modal="true" aria-labelledby="about-title" onClick={(event) => event.stopPropagation()}>
+          <div className="about-heading"><span className="brand-mark"><Icon name="shield" size={19} /></span><H2 id="about-title">About TriageLens</H2><Button aria-label="Close About TriageLens" onClick={() => setAboutOpen(false)}><Icon name="close" size={18} /></Button></div>
+          <p>TriageLens turns security alerts, suspicious emails and malware types into plain-English answers. Every evidence quote is checked against the original text by code, and code-set minimum scores can't be lowered by the AI. Tested on about 1,500 emails from public datasets: 96.7% agreement on 300 unseen emails, 98% of bad email caught, under 5% false alarms, 100/100 real phishing. Data: Kaggle Phishing Email Dataset; AIT Alert Data Set (AIT Austrian Institute of Technology, CC BY 4.0), shared by CrowdStrike; MalMem-2022.</p>
+        </section>
+      </div>}
       {toast && <div className="toast"><Icon name="check" size={16} />{toast}</div>}
     </div>
   );
