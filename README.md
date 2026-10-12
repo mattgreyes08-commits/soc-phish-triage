@@ -48,9 +48,17 @@ The spam dataset labels spam and phishing together, so the accuracy number measu
 | Dataset | Used for | Source |
 |---|---|---|
 | **Phishing Email Dataset** (Enron, Ling, CEAS-08, Nazario, Nigerian Fraud, SpamAssassin) | Phishing demo samples and accuracy testing | Kaggle: [naserabdullahalam/phishing-email-dataset](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset) |
-| **AIT Alert Data Set (AIT-ADS)**, provided by CrowdStrike | The 5 real Alerts-tab samples (scenario `russellmitchell`) | Zenodo: [record 8263181](https://zenodo.org/records/8263181), CC BY 4.0 |
+| **AIT Alert Data Set (AIT-ADS)** by Landauer, Skopik and Wurzenberger, AIT Austrian Institute of Technology | The 5 real Alerts-tab samples (scenario `russellmitchell`) | Zenodo: [doi:10.5281/zenodo.8263181](https://doi.org/10.5281/zenodo.8263181), CC BY 4.0 (citation below) |
 | **MalMem augmented 5-class dataset**, based on CIC-MalMem-2022 (obfuscated malware memory analysis) | Per-type averages behind the malware explanations. **We used only the original `MalMem2022.csv` from this page, not the synthetic/augmented files.** | Kaggle: [shanmukhadattaboda/malmem-augmneted-5-class-datasets](https://www.kaggle.com/datasets/shanmukhadattaboda/malmem-augmneted-5-class-datasets); original by the Canadian Institute for Cybersecurity |
 | Team-written blind test (18 emails) | Blind accuracy test | `samples/phishing_demo.txt`, `samples/answer_key.txt` |
+
+**Citing AIT-ADS.** Used under CC BY 4.0. As its authors ask, we cite:
+
+- Landauer, M., Skopik, F., Wurzenberger, M. (2023). *AIT Alert Data Set* (Version 1) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.8263181
+- Landauer, M., Skopik, F., Wurzenberger, M. (2024). Introducing a New Alert Data Set for Multi-Step Attack Analysis. *Proceedings of the 17th Cyber Security Experimentation and Test Workshop.* https://doi.org/10.1145/3675741.3675748
+- Landauer, M., Skopik, F., Frank, M., Hotwagner, W., Wurzenberger, M., Rauber, A. (2023). Maintainable Log Datasets for Evaluation of Intrusion Detection Systems. *IEEE Transactions on Dependable and Secure Computing*, 20(4), 3466–3482.
+
+We selected and trimmed 5 alerts (`prep_alerts.py`); the alert content is otherwise unchanged.
 
 Raw datasets are not committed (`data/` is in `.gitignore`). Links in team-written samples use reserved `.example` domains.
 
