@@ -413,3 +413,9 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# TriageLens: the triage function requires the project's anon key on every request.
+# Callers (Figma Make, triage_client.py) send:  Authorization: Bearer <anon key>  and  apikey: <anon key>
+# A 401 error means that header is missing or wrong. Kept on so strangers can't spend our Claude credits.
+[functions.triage]
+verify_jwt = true

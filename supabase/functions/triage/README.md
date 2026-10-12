@@ -21,11 +21,14 @@
 ## Deploy
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=...        # never commit or paste the key anywhere else
-supabase functions deploy triage --no-verify-jwt  # or keep JWT and send the anon key from Figma Make
+supabase functions deploy triage --use-api        # login check stays on (supabase/config.toml: verify_jwt = true)
 ```
 Optional secrets: `TRIAGE_MODEL` (default `claude-sonnet-5-5`), `TRIAGE_EFFORT` (default `medium`).
 
-Call it from Figma Make: `POST https://<project-ref>.supabase.co/functions/v1/triage`.
+Call it from Figma Make: `POST https://<project-ref>.supabase.co/functions/v1/triage`
+with headers `Authorization: Bearer <anon key>` and `apikey: <anon key>` (Supabase dashboard → Project Settings → API Keys → `anon`).
+A **401** means that header is missing or wrong. Fix the header; don't turn the check off.
+Live project: `kcgrheohvwekdoryjnyy`.
 
 ## Test (offline, no key)
 ```bash
