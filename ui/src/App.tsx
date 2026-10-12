@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { DEMO_RESULTS } from "./demoResults";
 
 const Button = "button";
 const Input = "input";
@@ -54,6 +55,8 @@ async function runTriage(tool: Tool, input: string): Promise<TriageResult> {
   if (!response.ok || data.error) throw new Error("Triage failed");
   return data as TriageResult;
 }
+
+const demoDelay = () => new Promise((resolve) => window.setTimeout(resolve, 1000));
 
 const alertSamples = [
   {
@@ -166,8 +169,8 @@ function AnalyzeButton({ loading, onClick }: { loading: boolean; onClick: () => 
   return <AppButton variant="primary" onClick={onClick} disabled={loading}>{loading ? <><span className="spinner" />Analyzing...</> : <><Icon name="spark" size={15} />Analyze</>}</AppButton>;
 }
 
-function ResultCard({ result, error, onCopy }: { result: TriageResult | null; error: boolean; onCopy: () => void }) {
-  if (error) return <div className="analysis-error">Something went wrong. Try demo mode.</div>;
+function ResultCard({ result, error, onCopy }: { result: TriageResult | null; error: boolean | string; onCopy: () => void }) {
+  if (error) return <div className="analysis-error">{typeof error === "string" ? error : "Something went wrong. Try demo mode."}</div>;
   if (!result) return null;
   const verdict = result.verdict.toLowerCase();
   const tone = verdict.includes("phishing") || verdict.includes("critical")
@@ -219,7 +222,7 @@ function OverviewScreen({ onNavigate }: { onNavigate: (view: string) => void }) 
   </div>;
 }
 
-function EmailTriageScreen({ notify }: { notify: (message: string) => void }) {
+function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => void; demoMode: boolean }) {
   const emails = [
     {
       label: "1. Real shipping notice", from: "Parcelhop", subject: "Your order #20-55781 has shipped", time: "Today", risk: "Safe", address: "notifications@mail.parcelhop.example",
@@ -254,12 +257,20 @@ function EmailTriageScreen({ notify }: { notify: (message: string) => void }) {
   const [input, setInput] = useState(emails[0].input);
   const [result, setResult] = useState<TriageResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<boolean | string>(false);
   const mail = emails[activeMail];
   async function analyze() {
     setLoading(true);
     setFailed(false);
     setResult(null);
+    if (demoMode) {
+      await demoDelay();
+      const saved = DEMO_RESULTS.phishing[mail.label];
+      if (input !== mail.input || !saved) setFailed("Demo mode only has results for the sample dropdown options.");
+      else setResult(saved);
+      setLoading(false);
+      return;
+    }
     try { setResult(await runTriage("phishing", input)); } catch { setFailed(true); } finally { setLoading(false); }
   }
   return <div className="feature-page triage-page">
@@ -292,16 +303,24 @@ function EmailTriageScreen({ notify }: { notify: (message: string) => void }) {
   </div>;
 }
 
-function MalwareScreen({ notify }: { notify: (message: string) => void }) {
+function MalwareScreen({ notify, demoMode }: { notify: (message: string) => void; demoMode: boolean }) {
   const [tab, setTab] = useState("Overview");
   const [malwareType, setMalwareType] = useState("Ransomware");
   const [result, setResult] = useState<TriageResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<boolean | string>(false);
   async function analyze() {
     setLoading(true);
     setFailed(false);
     setResult(null);
+    if (demoMode) {
+      await demoDelay();
+      const saved = DEMO_RESULTS.malware[malwareType];
+      if (!saved) setFailed("Demo mode only has results for the sample dropdown options.");
+      else setResult(saved);
+      setLoading(false);
+      return;
+    }
     try { setResult(await runTriage("malware", malwareType)); } catch { setFailed(true); } finally { setLoading(false); }
   }
   return <div className="feature-page malware-page">
@@ -337,10 +356,11 @@ export default function App() {
   const [copilotAnswer, setCopilotAnswer] = useState("");
   const [toast, setToast] = useState("");
   const [view, setView] = useState("Overview");
+  const [demoMode, setDemoMode] = useState(false);
   const [alertInput, setAlertInput] = useState(alerts[0].input);
   const [alertResult, setAlertResult] = useState<TriageResult | null>(null);
   const [alertLoading, setAlertLoading] = useState(false);
-  const [alertFailed, setAlertFailed] = useState(false);
+  const [alertFailed, setAlertFailed] = useState<boolean | string>(false);
 
   const filtered = useMemo(() => alerts.filter((a) =>
     (filter === "All" || a.severity === filter) &&
@@ -373,6 +393,14 @@ export default function App() {
     setAlertLoading(true);
     setAlertFailed(false);
     setAlertResult(null);
+    if (demoMode) {
+      await demoDelay();
+      const saved = DEMO_RESULTS.alert[selected.title];
+      if (alertInput !== selected.input || !saved) setAlertFailed("Demo mode only has results for the sample dropdown options.");
+      else setAlertResult(saved);
+      setAlertLoading(false);
+      return;
+    }
     try { setAlertResult(await runTriage("alert", alertInput)); } catch { setAlertFailed(true); } finally { setAlertLoading(false); }
   }
 
@@ -402,14 +430,18 @@ export default function App() {
         <header className="topbar">
           <div><p className="eyebrow">Security operations</p><H1>{({ Overview: "Command center", Alerts: "Alert investigation", Phishing: "Phishing analysis", "Malware analysis": "Malware analysis" } as Record<string, string>)[view]}</H1></div>
           <div className="top-actions">
+            <div className="demo-control">
+              <Button className={`demo-toggle ${demoMode ? "active" : ""}`} aria-pressed={demoMode} onClick={() => setDemoMode((current) => !current)}><span className="toggle-track"><i /></span><strong>Demo mode</strong></Button>
+              {demoMode && <span className="demo-badge">DEMO</span>}
+            </div>
             <label className="global-search"><Icon name="search" size={17} /><Input aria-label="Search alerts" placeholder="Search alerts, users, IPs..." value={query} onChange={(e) => setQuery(e.target.value)} /><kbd>⌘ K</kbd></label>
             <Button className="icon-button" aria-label="Notifications"><span className="notification-dot" /><Icon name="clock" /></Button>
           </div>
         </header>
 
         {view === "Overview" && <OverviewScreen onNavigate={setView} />}
-        {view === "Phishing" && <EmailTriageScreen notify={notify} />}
-        {view === "Malware analysis" && <MalwareScreen notify={notify} />}
+        {view === "Phishing" && <EmailTriageScreen notify={notify} demoMode={demoMode} />}
+        {view === "Malware analysis" && <MalwareScreen notify={notify} demoMode={demoMode} />}
         {view === "Alerts" && <>
         <section className="stats-row">
           <div className="stat"><span>Open alerts</span><strong>24</strong><small className="up">+6 today</small></div>

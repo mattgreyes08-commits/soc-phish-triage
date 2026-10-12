@@ -49,6 +49,15 @@ button { cursor: pointer; }
 .eyebrow { margin: 0 0 3px; color: #7b8580; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
 h1 { font-size: 20px; line-height: 1; margin: 0; letter-spacing: -.45px; }
 .top-actions { display: flex; gap: 10px; align-items: center; }
+.demo-control { display: flex; align-items: center; gap: 6px; }
+.demo-toggle { padding: 0; border: 0; display: flex; align-items: center; gap: 7px; background: transparent; color: #65716b; font-size: 10px; }
+.demo-toggle strong { white-space: nowrap; font-weight: 600; }
+.toggle-track { width: 28px; height: 16px; padding: 2px; border-radius: 9px; display: flex; align-items: center; background: #cdd5d1; transition: background .18s ease; }
+.toggle-track i { width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgba(20,40,30,.2); transition: transform .18s ease; }
+.demo-toggle.active .toggle-track { background: var(--green); }
+.demo-toggle.active .toggle-track i { transform: translateX(12px); }
+.demo-toggle.active { color: var(--green); }
+.demo-badge { padding: 3px 6px; border-radius: 4px; background: var(--amber-soft); color: #9b5b08; font-size: 7px; font-weight: 800; letter-spacing: .7px; }
 .global-search { width: 288px; height: 36px; padding: 0 10px; border: 1px solid var(--line); background: #f8faf9; border-radius: 7px; display: flex; align-items: center; gap: 8px; color: #7d8782; }
 .global-search input { flex: 1; width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 12px; }
 .global-search input::placeholder { color: #9aa39e; }
