@@ -208,7 +208,7 @@ function OverviewScreen({ onNavigate }: { onNavigate: (view: string) => void }) 
     </div>
     <div className="overview-grid">
       <section className="overview-card priority-card">
-        <div className="card-heading"><div><H3>Priority queue</H3><p>Ranked by TriageLens</p></div><Button onClick={() => onNavigate("Alerts")}>View all <Icon name="chevron" size={13} /></Button></div>
+        <div className="card-heading"><div><H3>Priority queue</H3><p>Ranked by TalosAI</p></div><Button onClick={() => onNavigate("Alerts")}>View all <Icon name="chevron" size={13} /></Button></div>
         {alerts.slice(0, 3).map((alert) => <Button className="priority-item" key={alert.id} onClick={() => onNavigate("Alerts")}><span className={`priority-symbol ${alert.severity.toLowerCase()}`}><Icon name={alert.source.includes("Defender") ? "mail" : alert.source.includes("Crowd") ? "bug" : "shield"} size={15} /></span><span><strong>{alert.title}</strong><small>{alert.source} · {alert.time}</small></span><SeverityPill severity={alert.severity} /></Button>)}
       </section>
     </div>
@@ -287,7 +287,7 @@ function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => 
         <div className="email-technical"><Button>Headers</Button><Button>Raw message</Button><Button>Attachments (0)</Button></div>
       </section>
       <aside className="analysis-panel">
-        <div className="analysis-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see TriageLens's verdict and evidence.</p></div>
+        <div className="analysis-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see TalosAI's verdict and evidence.</p></div>
       </aside>
     </div>
   </div>;
@@ -411,7 +411,7 @@ export default function App() {
         </nav>
         <div className="sidebar-bottom">
           <Button className="nav-item"><Icon name="settings" /><span>Settings</span></Button>
-          <Button className="about-link" onClick={() => setAboutOpen(true)}>About TriageLens</Button>
+          <Button className="about-link" onClick={() => setAboutOpen(true)}>About TalosAI</Button>
           <div className="profile">
             <div className="avatar">AK</div><div><strong>Alex Kim</strong><small>Security analyst</small></div><span className="online-dot" />
           </div>
@@ -522,8 +522,8 @@ export default function App() {
       </main>
       {aboutOpen && <div className="about-overlay" onClick={() => setAboutOpen(false)}>
         <section className="about-panel" role="dialog" aria-modal="true" aria-labelledby="about-title" onClick={(event) => event.stopPropagation()}>
-          <div className="about-heading"><span className="brand-mark"><Icon name="shield" size={19} /></span><H2 id="about-title">About TriageLens</H2><Button aria-label="Close About TriageLens" onClick={() => setAboutOpen(false)}><Icon name="close" size={18} /></Button></div>
-          <p>TriageLens turns security alerts, suspicious emails and malware types into plain-English answers. Every evidence quote is checked against the original text by code, and code-set minimum scores can't be lowered by the AI. Tested on about 1,500 emails from public datasets: 96.7% agreement on 300 unseen emails, 98% of bad email caught, under 5% false alarms, 100/100 real phishing. Data: Kaggle Phishing Email Dataset; AIT Alert Data Set (AIT Austrian Institute of Technology, CC BY 4.0), shared by CrowdStrike; MalMem-2022.</p>
+          <div className="about-heading"><span className="brand-mark"><Icon name="shield" size={19} /></span><H2 id="about-title">About TalosAI</H2><Button aria-label="Close About TalosAI" onClick={() => setAboutOpen(false)}><Icon name="close" size={18} /></Button></div>
+          <p>TalosAI turns security alerts, suspicious emails and malware types into plain-English answers. Every evidence quote is checked against the original text by code, and code-set minimum scores can't be lowered by the AI. Tested on about 1,500 emails from public datasets: 96.7% agreement on 300 unseen emails, 98% of bad email caught, under 5% false alarms, 100/100 real phishing. Data: Kaggle Phishing Email Dataset; AIT Alert Data Set (AIT Austrian Institute of Technology, CC BY 4.0), shared by CrowdStrike; MalMem-2022.</p>
         </section>
       </div>}
       {toast && <div className="toast"><Icon name="check" size={16} />{toast}</div>}
