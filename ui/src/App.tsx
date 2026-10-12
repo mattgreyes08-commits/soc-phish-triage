@@ -273,7 +273,7 @@ function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => 
       <label className="composer-input"><span>Or paste email text</span><Textarea value={input} onChange={(event) => setInput(event.target.value)} placeholder="Paste message body or headers here..." /></label>
     </div>
     {(result || failed) && <ResultCard result={result} error={failed} onCopy={() => copyText(result?.plain_english ?? "", notify)} />}
-    <div className="triage-layout">
+    <div className={`triage-layout ${result ? "result-shown" : ""}`}>
       <aside className="mailbox-panel">
         <div className="mailbox-heading"><div><H3>Inbox samples</H3><p>7 messages</p></div><Icon name="search" size={16} /></div>
         {emails.map((email, index) => <Button className={`mail-item ${activeMail === index ? "active" : ""}`} key={email.label} onClick={() => { setActiveMail(index); setInput(email.input); }}><span className="mail-avatar">{email.from.split(" ").map(x => x[0]).join("").slice(0, 2)}</span><span className="mail-copy"><strong>{email.from}</strong><span>{email.subject}</span><small>{email.time}</small></span></Button>)}
@@ -282,9 +282,9 @@ function EmailTriageScreen({ notify, demoMode }: { notify: (message: string) => 
         <div className="email-head"><H2>{mail.subject}</H2><div className="sender-row"><span className="mail-avatar">{mail.from.slice(0, 2).toUpperCase()}</span><div><strong>{mail.from}</strong><small>{mail.address} · to Finance Team</small></div><time>{mail.time}</time></div></div>
         <div className="email-body email-raw-preview">{mail.input}</div>
       </section>
-      <aside className="analysis-panel">
+      {!result && <aside className="analysis-panel">
         <div className="analysis-waiting"><span><Icon name="spark" size={17} /></span><p>Press Analyze to see TalosAI's verdict and evidence.</p></div>
-      </aside>
+      </aside>}
     </div>
   </div>;
 }

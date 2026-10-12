@@ -202,6 +202,7 @@ kbd { padding: 2px 5px; border: 1px solid #dce2de; border-radius: 4px; backgroun
 
 /* Email triage */
 .triage-layout { height: calc(100vh - 186px); min-height: 560px; display: grid; grid-template-columns: minmax(210px, .7fr) minmax(360px, 1.35fr) minmax(250px, .8fr); border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--line); gap: 1px; }
+.triage-layout.result-shown { grid-template-columns: minmax(210px, .7fr) minmax(360px, 2.15fr); }
 .mailbox-panel, .email-preview, .analysis-panel { background: white; min-width: 0; }
 .mailbox-heading { height: 57px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--soft-line); color: #84908a; }.mailbox-heading h3 { margin: 0; color: var(--ink); font-size: 11px; }.mailbox-heading p { margin: 3px 0 0; font-size: 8px; }
 .mail-item { width: 100%; min-height: 84px; padding: 13px; border: 0; border-bottom: 1px solid var(--soft-line); background: white; display: flex; align-items: flex-start; gap: 9px; text-align: left; position: relative; }.mail-item.active { background: #f1f8f5; box-shadow: inset 3px 0 var(--green); }
