@@ -34,6 +34,12 @@ export function floorsFor(tool: Tool, sig: Signals, llmFlaggedManipulation: bool
   if (sig.risky_attachments.length) {
     hits.push({ rule: "risky_attachment", floor: 60, label: `Risky attachment: ${sig.risky_attachments[0]}` });
   }
+  if (tool === "alert" && sig.credential_file_access) {
+    hits.push({ rule: "credential_file_access", floor: 90, label: "Password hashes read (credential theft)" });
+  }
+  if (tool === "alert" && sig.service_account_pivot) {
+    hits.push({ rule: "service_account_pivot", floor: 70, label: "Web server account used to act as a person" });
+  }
   if (sig.auth_fail && sig.link_mismatch.length) {
     hits.push({ rule: "auth_fail_link_mismatch", floor: 60, label: "Failed sender checks and a disguised link" });
   }
@@ -58,11 +64,12 @@ export function consistentPhishingVerdict(score: number, verdict: string, floors
 
 const SEVERITY = ["low", "medium", "high", "critical"];
 
-// Alerts: AI-directed text or classic attack patterns force at least "high".
+// Alerts: credential theft forces "critical"; AI-directed text or classic attack patterns force at least "high".
 export function consistentAlertSeverity(verdict: string, sig: Signals, floors: FloorHit[]): string {
-  const mustBeHigh = floors.some((f) => f.rule.startsWith("ai_instruction")) ||
-    sig.encoded_powershell || sig.office_spawned_script || sig.mass_rename;
   const idx = Math.max(0, SEVERITY.indexOf(verdict));
+  if (sig.credential_file_access) return "critical";
+  const mustBeHigh = floors.some((f) => f.rule.startsWith("ai_instruction")) ||
+    sig.encoded_powershell || sig.office_spawned_script || sig.mass_rename || sig.service_account_pivot;
   return mustBeHigh ? SEVERITY[Math.max(idx, 2)] : SEVERITY[idx];
 }
 

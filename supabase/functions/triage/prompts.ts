@@ -56,8 +56,15 @@ ${securityRules(n, "alert")}
 
 HOW TO JUDGE:
 - Base every statement on fields in the alert. If information is missing, say what an analyst should check next. Do not guess.
-- verdict = severity: "critical" | "high" | "medium" | "low", based on likely impact and whether action is needed now. An attack that was blocked is usually "low".
-- risk_score 0-100 consistent with the severity.
+- Judge severity yourself. "severity_from_tool" is often wrong (tools under-rate real attacks), so never copy it.
+- Parsed fields like "details" can be mis-split by the log tool; trust the raw "log" line when they disagree.
+- verdict = severity, using this rubric:
+  - "critical": an attacker likely has deep access or is causing harm now, e.g. password hashes or credential stores read (/etc/shadow, SAM, LSASS), root/admin gained by an attacker, files being encrypted, data being stolen.
+  - "high": likely compromise needing action today, e.g. a web or service account (www-data, apache, IUSR) switching to a person's account or spawning shells, commands run from a website's upload folder, successful brute-force login, malicious script launched.
+  - "medium": active attack attempts with no success shown, e.g. port/vulnerability scans, directory brute-forcing (many 404s from one address), repeated failed logins.
+  - "low": routine activity, or an attack that was blocked.
+- When unsure between two levels, pick the higher one and say what would lower it.
+- risk_score 0-100 consistent with the severity (critical 85-100, high 65-84, medium 40-64, low 0-39).
 
 OUTPUT: one JSON object.
 ${QUOTES} Quote field values you relied on.

@@ -34,6 +34,8 @@ export interface Signals {
   encoded_powershell: boolean;
   office_spawned_script: boolean;
   mass_rename: boolean;
+  credential_file_access: boolean; // reading password hashes (/etc/shadow, SAM, LSASS dumps)
+  service_account_pivot: boolean; // web/service account switching users, or su/sudo run from a web folder
 }
 
 // Initial list from the team guide + kickoff notes. Replace with keywords.json (spec §9) when built.
@@ -81,6 +83,13 @@ const MONEY =
 
 const CREDENTIAL =
   /verify\s+(?:your\s+)?(?:account|identity|password|login)|confirm\s+(?:your\s+)?(?:password|credentials|login|account)|(?:log\s*in|sign\s*in)\s+(?:below|here|now|to\s+(?:verify|confirm|restore|keep))|reset\s+your\s+password|account\s+(?:will\s+be\s+|has\s+been\s+)?(?:suspended|locked|disabled|deactivated)/i;
+
+const CREDENTIAL_FILE =
+  /\b(?:cat|less|more|head|tail|cp|scp|base64|strings|unshadow|john|tar|zip)\s+[^\n"]*\/etc\/g?shadow\b|reg(?:\.exe)?\s+save\s+hklm\\+sam|(?:procdump|minidump|comsvcs|sekurlsa|mimikatz)[^\n"]{0,80}|lsass[^\n"]{0,40}\.dmp|ntds\.dit/i;
+
+// Web/service accounts that should never become a person, and web folders no admin works from.
+const SERVICE_ACCOUNT_PIVOT =
+  /\bsu(?:\[\d+\])?:\s*\+?\s*\S*\s*(?:www-data|apache|nginx|httpd|tomcat\d*|nobody|iusr|apppool)\s*:\s*[\w.-]+|(?:sudo|\bsu\b)[^\n]*PWD=(?:\/var\/www|\/srv\/www|[a-z]:\\\\?inetpub)/i;
 
 const RISKY_FILE = /\b[\w\-]+(?:\.[\w\-]+)*\.(?:html?|iso|img|js|vbs|hta|scr|exe|docm|xlsm|pptm|lnk)\b/gi;
 
@@ -239,6 +248,8 @@ export function computeSignals(tool: Tool, input: string): Signals {
     office_spawned_script:
       /(winword|excel|powerpnt|outlook)\.exe[\s\S]{0,80}?(powershell|cmd|wscript|cscript|mshta|rundll32)\.exe/i.test(noZw),
     mass_rename: /\.locked\b|renamed?\s+\d{2,}|hundreds\s+of\s+files/i.test(noZw),
+    credential_file_access: CREDENTIAL_FILE.test(noZw),
+    service_account_pivot: SERVICE_ACCOUNT_PIVOT.test(noZw),
   };
 }
 

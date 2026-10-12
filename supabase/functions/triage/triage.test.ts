@@ -154,3 +154,26 @@ test("notable features from the real MalMem profiles", async () => {
   assert.deepEqual(higher("Trojan"), []); // Trojans blend in: nothing higher than normal
   assert.ok(notableFeatures(profiles.Trojan).every((f) => f.direction === "lower"));
 });
+
+test("alert rules: credential theft is critical, web-account pivot is high, routine stays low", async () => {
+  const { readFileSync } = await import("node:fs");
+  const alerts = JSON.parse(readFileSync(new URL("../../../samples/alerts.json", import.meta.url), "utf8"));
+  const [routine, , , pivot, shadow] = Object.values(alerts).map((a) => JSON.stringify(a));
+  const sigPivot = computeSignals("alert", pivot);
+  const sigShadow = computeSignals("alert", shadow);
+  const sigRoutine = computeSignals("alert", routine);
+  assert.equal(sigPivot.service_account_pivot, true);
+  assert.equal(sigShadow.credential_file_access, true);
+  assert.equal(sigRoutine.credential_file_access || sigRoutine.service_account_pivot, false);
+
+  // A file-integrity alert that merely mentions /etc/shadow (password change) is not credential theft.
+  assert.equal(computeSignals("alert", '{"rule":"Integrity checksum changed","file":"/etc/shadow"}').credential_file_access, false);
+
+  const low = fake({ verdict: "low", risk_score: 20, evidence: [{ quote: "Successful sudo to ROOT executed.", why: "rule" }] });
+  const r = await runTriage({ tool: "alert", input: shadow }, low, {});
+  assert.equal(r.verdict, "critical");
+  assert.ok(r.risk_score! >= 90);
+  const low2 = fake({ verdict: "low", risk_score: 20, evidence: [{ quote: "User successfully changed UID.", why: "rule" }] });
+  const r2 = await runTriage({ tool: "alert", input: pivot }, low2, {});
+  assert.equal(r2.verdict, "high");
+});
