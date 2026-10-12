@@ -34,14 +34,34 @@ If Claude is unreachable, the function returns a labeled rules-only verdict inst
 
 ## Results
 
-| Test | Result |
-|---|---|
-| **Team-written phishing test**: 18 emails, scored against an answer key written before the first run | **17/18 on the first run** (one false alarm on a real IT newsletter). After fixing that miss: 18/18, but that second score is tuned on the same emails, so treat 17/18 as the unbiased number |
-| **Accuracy on real labeled email**: balanced random samples of 200 (100 bad + 100 legitimate, seed 7) from two independent datasets, live backend | **375/400 (94%)**: CEAS-08 182/200, SpamAssassin 193/200. Caught **187/200** spam/phishing and left **188/200** legitimate emails alone. Most misses were bulk newsletters (e.g. spoofed news digests) judged legitimate, or legitimate marketing judged spam; 4 were obfuscated pharmacy spam that Claude's safety filter declined to analyze; the fallback then said "legitimate". Fixed: a refusal now returns "suspicious, a person should review it". (Earlier 40-email samples: 37/40 and 39/40.) |
-| **Lab-generated alerts**: 5 Wazuh alerts from the AIT Alert Data Set (a simulated multi-step attack in a research testbed), expected severity set by the team | **5/5**. The alert for reading `/etc/shadow` as root was rated **3/15 (low) by Wazuh** and **critical (92) by TriageLens** |
-| **Malware explanations**: Ransomware, Spyware, Trojan | All numbers come from the original MalMem2022.csv (no synthetic rows); facts checked by CS 2 |
+**Final numbers**, from a confirmation run on emails never used to build or tune anything, with no changes made afterwards:
 
-The spam dataset labels spam and phishing together, so the accuracy number measures "caught bad email", not "told phishing apart from spam". The team-written test checks that distinction.
+| Measure | Result | Target |
+|---|---|---|
+| Overall agreement with dataset labels (CEAS-08, SpamAssassin, Enron; 50 bad + 50 legitimate each) | **290/300 (96.7%)**, plausibly 94–98% | none |
+| Bad email caught (spam + phishing) | **147/150 (98%)** | ≥ 95% ✅ |
+| False alarms on legitimate email | **7/150 (4.7%)** | ≤ 5% ✅ |
+| Real phishing caught (Nazario phishing corpus) | **100/100** | none |
+| Team-written test (18 emails incl. 2 AI-manipulation traps), first run | **17/18**; 18/18 after one fix, but that rerun is tuned on the same emails | none |
+| Lab-generated alerts (5 Wazuh alerts, AIT Alert Data Set) | **5/5** expected severity. `/etc/shadow` read as root: **Wazuh 3/15 (low), TriageLens critical** | none |
+| Malware explanations (Ransomware, Spyware, Trojan) | All numbers come from the original MalMem2022.csv; facts checked by CS 2 | none |
+
+The spam datasets label spam and phishing together, so these numbers measure "caught bad email", not "told phishing apart from spam". The team-written test checks that distinction.
+
+### How we tested
+
+We never tuned on the emails we report. Each change was checked **before and after on the same fresh emails**, then confirmed once on new ones. About 1,500 emails were run in total, across four public datasets.
+
+| Round | Emails | Result | What we learned and changed |
+|---|---|---|---|
+| 1. First sample | 80 (CEAS, SpamAssassin) | 76/80 | Small samples flatter you; run more |
+| 2. Bigger sample | 400 | 375/400 (94%) | 4 misses were Claude **safety refusals** on obfuscated pharmacy spam, which the fallback marked "legitimate". **Fix:** a refusal now returns "suspicious, a person should review it" |
+| 3. Sender-identity rule | Same 200 fresh, before vs after | 184 → 193/200; false alarms 14 → 7 | Spam vs legitimate marketing is decided by whether the sender really is who the email claims to be |
+| 4. Check on new emails | 200 never-seen | 183/200; false alarms 15/100 | The rule over-flagged **mailing-list replies** and terse work emails. Not visible in round 3: this is why we retest on fresh emails |
+| 5. Mailing-list fix | Same 300 fresh, before vs after | 286 → 295/300; false alarms 12 → 5 | Mailing lists and short work emails with ordinary attachments are not red flags. Team test still 18/18, alerts 5/5 |
+| 6. **Final confirmation** | 300 + 100 never-seen | **290/300; Nazario 100/100** | Reported above. The first attempt sent 16 requests at once; 15 hit the overload fallback (all correct when rerun). Rerun at 4 at a time, same emails: 0 fallbacks |
+
+**Known limits.** Remaining misses are mostly gray-zone bulk mail (spoofed news digests, legitimate newsletters with odd sender domains). Datasets are mostly 2002–2008 email. Production use would need request queuing for bursts of traffic, and a human stays in the loop for every verdict.
 
 ## Datasets
 
