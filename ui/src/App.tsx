@@ -190,7 +190,7 @@ function ResultCard({ result, error, onCopy }: { result: TriageResult | null; er
 function OverviewScreen({ onNavigate }: { onNavigate: (view: string) => void }) {
   return <div className="feature-page overview-page">
     <div className="feature-hero">
-      <div><H2>Good morning, Alex</H2><p>Three critical alerts need attention. Everything else is stable.</p></div>
+      <div><H2>Good morning, Alex</H2><p>5 sample alerts ready for triage.</p></div>
       <div className="overview-actions">
         <AppButton onClick={() => onNavigate("Phishing")}><Icon name="mail" size={15} /> Triage email</AppButton>
         <AppButton variant="primary" onClick={() => onNavigate("Alerts")}><Icon name="shield" size={15} /> View alerts</AppButton>
