@@ -184,7 +184,7 @@ function ResultCard({ result, error, onCopy }: { result: TriageResult | null; er
     {result.ai_manipulation_detected && <div className="manipulation-banner"><Icon name="shield" size={15} />This message tries to manipulate AI tools.</div>}
     <div className="result-top"><span className={`result-verdict ${tone}`}>{result.verdict}</span>{result.risk_score !== null && <strong>Risk: {result.risk_score}/100</strong>}</div>
     <H3 className="result-headline">{result.headline}</H3>
-    {result.evidence?.length > 0 && <div className="result-section"><H3>Evidence</H3><div className="evidence-list">{result.evidence.map((item, index) => <div key={`${item.quote}-${index}`}><q>{item.quote}</q><p>{item.why}</p></div>)}</div></div>}
+    {result.evidence?.length > 0 && <div className="result-section"><H3>Evidence</H3><div className="evidence-list">{result.evidence.map((item, index) => <div key={`${item.quote}-${index}`}><div className="evidence-quote"><q>{item.quote}</q><span className="evidence-verified" title="This exact text was found in the input."><Icon name="check" size={10} />Verified</span></div><p>{item.why}</p></div>)}</div></div>}
     <div className="plain-english"><div><H3>Plain English</H3><Button onClick={onCopy}><Icon name="copy" size={13} />Copy</Button></div><p>{result.plain_english}</p></div>
     {result.next_steps?.length > 0 && <div className="result-section"><H3>Next steps</H3><div className="next-steps">{result.next_steps.map((step, index) => <div key={`${step}-${index}`}><span><Icon name="check" size={11} /></span><p>{step}</p></div>)}</div></div>}
   </section>;
