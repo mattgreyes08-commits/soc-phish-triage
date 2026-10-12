@@ -57,9 +57,13 @@ const SHORTENERS = new Set([
 ]);
 
 // Tier 1: instruction-shaped text. Floors the score with no LLM needed.
+// "ignore previous instructions ABOUT the old ticket page" is ordinary office wording, so a topic word after it doesn't count.
+const NOT_A_TOPIC = String.raw`\b(?!\s+(?:about|regarding|for|on|concerning|re)\b)`;
 const STRONG_AI = [
-  /ignore\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|earlier|your)\s+(?:instructions|rules|prompts?)/gi,
-  /disregard\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|your)\s+(?:instructions|rules|prompts?)/gi,
+  new RegExp(String.raw`ignore\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|earlier|your)\s+(?:instructions|rules|prompts?)` + NOT_A_TOPIC, "gi"),
+  new RegExp(String.raw`disregard\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|your)\s+(?:instructions|rules|prompts?)` + NOT_A_TOPIC, "gi"),
+  // Text addressed to software instead of a person: "Note to automated reviewer: ...".
+  /\b(?:note|message|instructions?|attention)\s+(?:to|for)\s+(?:the\s+|any\s+|all\s+)?(?:automated|ai|automatic)\s+(?:reviewers?|review|systems?|scanners?|filters?|assistants?|agents?|classifiers?|tools?)\b/gi,
   /(?:classify|mark|label|treat|flag)\s+(?:this|it|the)\s*(?:email|message|alert|ticket)?\s+as\s+(?:safe|benign|legitimate|clean|not\s+(?:spam|phishing))/gi,
   /this\s+(?:email|message)\s+(?:has\s+been|was|is)\s+(?:verified|approved|whitelisted|cleared)\s+by/gi,
   /you\s+are\s+now\s+(?:an?\s+)?[\w-]+/gi,
