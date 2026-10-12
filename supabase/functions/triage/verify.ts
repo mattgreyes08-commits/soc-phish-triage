@@ -7,9 +7,11 @@ import { norm } from "./text.ts";
 
 export interface Corpus { source: string; text: string }
 
+// One entry of malware_profiles.json (written by prep_malware.py).
 export interface MalwareProfile {
+  type?: string;
   samples: number;
-  features: Record<string, { family_avg: number; benign_avg: number }>;
+  features: Record<string, { family_avg: number; benign_avg: number; times_benign?: number; meaning?: string }>;
 }
 
 export function corporaFor(tool: Tool, sig: Signals, input: string, profile?: MalwareProfile): Corpus[] {
@@ -76,6 +78,7 @@ export function unsupportedNumbers(text: string, profile: MalwareProfile): strin
   for (const f of Object.values(profile.features)) {
     values.push(f.family_avg, f.benign_avg);
     if (f.benign_avg > 0) ratios.push(f.family_avg / f.benign_avg);
+    if (f.times_benign !== undefined) values.push(f.times_benign);
   }
   const close = (a: number, b: number, tol: number) => Math.abs(a - b) <= Math.max(tol * Math.abs(b), 0.051);
   const bad: string[] = [];
