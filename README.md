@@ -37,7 +37,7 @@ If Claude is unreachable, the function returns a labeled rules-only verdict inst
 | Test | Result |
 |---|---|
 | **Team-written phishing test**: 18 emails, scored against an answer key written before the first run | **17/18 on the first run** (one false alarm on a real IT newsletter). After fixing that miss: 18/18, but that second score is tuned on the same emails, so treat 17/18 as the unbiased number |
-| **Accuracy on real labeled email**: balanced random samples of 40 (20 bad + 20 legitimate, seed 7) from two independent datasets, live backend | **CEAS-08: 37/40** and **SpamAssassin: 39/40** (76/80 overall). Caught **40/40** spam/phishing across both; all 4 misses were legitimate marketing, newsletter or mailing-list emails flagged as spam/suspicious |
+| **Accuracy on real labeled email**: balanced random samples of 200 (100 bad + 100 legitimate, seed 7) from two independent datasets, live backend | **375/400 (94%)**: CEAS-08 182/200, SpamAssassin 193/200. Caught **187/200** spam/phishing and left **188/200** legitimate emails alone. Most misses were bulk newsletters (e.g. spoofed news digests) judged legitimate, or legitimate marketing judged spam; 4 were rules-only fallbacks when Claude timed out under the parallel test load. (Earlier 40-email samples: 37/40 and 39/40.) |
 | **Lab-generated alerts**: 5 Wazuh alerts from the AIT Alert Data Set (a simulated multi-step attack in a research testbed), expected severity set by the team | **5/5**. The alert for reading `/etc/shadow` as root was rated **3/15 (low) by Wazuh** and **critical (92) by TriageLens** |
 | **Malware explanations**: Ransomware, Spyware, Trojan | All numbers come from the original MalMem2022.csv (no synthetic rows); facts checked by CS 2 |
 
