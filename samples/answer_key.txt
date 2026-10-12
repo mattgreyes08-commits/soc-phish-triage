@@ -1,0 +1,18 @@
+T01: legitimate
+T02: legitimate
+T03: legitimate
+T04: phishing
+T05: legitimate
+T06: legitimate
+T07: phishing
+T08: spam
+T09: legitimate
+T10: spam
+T11: phishing (AI trick)
+T12: phishing
+T13: phishing
+T14: suspicious
+T15: phishing
+T16: legitimate
+T17: phishing (AI trick)
+T18: legitimate
